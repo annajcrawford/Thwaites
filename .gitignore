@@ -1,0 +1,15 @@
+batch*
+*txt
+./TG_S0/vtuoutputs/*vtu
+./TG_S1/vtuoutputs/*vtu
+./TG_S2/vtuoutputs/*vtu
+PROG/*
+Mesh/*
+ELMERSTART*
+*'#'*
+*~
+*result*
+./mesh2D_TG_refpart/partitioning.128/*part*
+*vtu
+*.so
+*.F90
