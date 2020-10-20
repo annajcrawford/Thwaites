@@ -402,7 +402,7 @@ Solver 12
   Apply Dirichlet = Logical True
   Linear System Solver = Iterative
   Linear System Iterative Method = BiCGStab
-  Linear System Max Iterations  = 600 !Was 500
+  Linear System Max Iterations  = 500
   Linear System Preconditioning = ILU1
   Linear System Convergence Tolerance = 1.0e-08
   Nonlinear System Max Iterations = 100
@@ -484,17 +484,17 @@ End
 
 Boundary Condition 1
   Name = "calving_front"
-  Target Boundaries(1)  = 1
+  Target Boundaries(1)  = 2
   External Pressure = Variable Coordinate 3
       Real lua "sw_pressure(tx[0])"
 End
 
 Boundary Condition 2
   Name = "inland_boundary"
-  Target Boundaries(2)  = 2 3
+  Target Boundaries(1)  = 1 
 
   Normal-Tangential Velocity = Logical True
-  Slip Coefficient 1 = Real 0.001 !was set to 10.0 by R
+  Slip Coefficient 1 = Real 100.0 
   Slip Coefficient 2 = Real 0.001
   Slip Coefficient 3 = Real 0.001
 
