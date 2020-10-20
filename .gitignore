@@ -3,9 +3,13 @@ batch*
 ./TG_S0/vtuoutputs/*vtu
 ./TG_S1/vtuoutputs/*vtu
 ./TG_S2/vtuoutputs/*vtu
+./TG_S3/vtuoutputs/*vtu
 PROG/*
 Mesh/*
-ELMERSTART*
+./TG_S0/ELMERSTART*
+./TG_S1/ELMERSTART*
+./TG_S2/ELMERSTART*
+./TG_S3/ELMERSTART*
 *'#'*
 *~
 *result*

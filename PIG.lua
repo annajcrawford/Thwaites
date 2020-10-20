@@ -5,7 +5,7 @@ meshdb = "../mesh2D_TG_refpart/"
 
 
 -- ## Min threshold value for Ice thickness (Real)
-MINH = 10.0
+MINH = 1.0
 
 -- ## levels in the vertical
 MLEV = 15
