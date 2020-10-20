@@ -36,10 +36,10 @@ Simulation
   Timestepping Method = "bdf"
   BDF Order = 1
 
-  Timestep Intervals = 40
-  !TimeStep Size = 0.00001  
-  TimeStep Size = Variable "Timestep"
-     Real lua "timeStepCalc(tx[0])"
+  Timestep Intervals = 80
+  TimeStep Size = 0.00001 !5 min, when working in years with Elmer  
+  !TimeStep Size = Variable "Timestep"
+    ! Real lua "timeStepCalc(tx[0])"
   Output Intervals = 1
 
   Steady State Min Iterations = 1

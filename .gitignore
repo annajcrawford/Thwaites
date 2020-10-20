@@ -3,6 +3,7 @@ batch*
 ./TG_S0/vtuoutputs/*vtu
 ./TG_S1/vtuoutputs/*vtu
 ./TG_S2/vtuoutputs/*vtu
+./TG_S2/vtuoutputs/originalts/*vtu
 ./TG_S3/vtuoutputs/*vtu
 PROG/*
 Mesh/*
