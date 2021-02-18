@@ -42,6 +42,7 @@ Tc=-1.0
 
 -- VELOCITY_DATA = "/projappl/project_2002875/data/antarctic/antarctica_m2slim.nc"
 BETA_GUESS    = "/projappl/project_2002875/data/antarctic/aa_v3_e8_l11_beta.nc"
+SMB_DATA      = "/projappl/project_2002875/data/antarctic/smbref_1995_2014_mar.nc"
 
 datadir = "/projappl/project_2002875/data/antarctic/"
 outdir  = "./vtuoutputs"
@@ -228,10 +229,10 @@ function floatLower(thick,bed)
 end  		
 
 
--- ## variable timestepping (TODO: dt_init and dt_max and dt_incr should be passed in)
+-- ## variable timestepping (TODO: dt_init and dt_max and dt_incr should be passed in) Remember dt_max was at 0.25
 function timeStepCalc(nt)
   dt_init = 0.00001
-  dt_max = 0.25
+  dt_max = 0.01469772 
   dt_incr = 1.15
   dt = dt_init * 1.2^nt 
   if ( dt > dt_max ) then

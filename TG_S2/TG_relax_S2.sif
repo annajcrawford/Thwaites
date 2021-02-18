@@ -1,10 +1,9 @@
-
 !---LUA BEGIN
 ! assert(loadfile('../COLD.lua'))()
 ! assert(loadfile('../PIG.lua'))()
 !---LUA END
 
-$name = "SurfRelax"
+$name = "SurfRelax_BFvel0_7min_11MINH"
 !$restart = "./TG_S1/Mesh/readnc.result" 
 $restart = "readnc"
 
@@ -19,7 +18,7 @@ Constants
   Bottom Surface Name =  String bedrock
   sea level = Real #zsl
   water density = Real #rhoo
-
+  
   ! parameters for the ismip6 basal melt 
   ! (seems to be mostly in SI units)
   gamma 0 = Real -11075.0 ! unit: m/yr
@@ -36,10 +35,10 @@ Simulation
   Timestepping Method = "bdf"
   BDF Order = 1
 
-  Timestep Intervals = 80
-  TimeStep Size = 0.00001 !5 min, when working in years with Elmer  
+  Timestep Intervals = 150
+  TimeStep Size = 0.000013 !7 min
   !TimeStep Size = Variable "Timestep"
-    ! Real lua "timeStepCalc(tx[0])"
+     !Real lua "timeStepCalc(tx[0])"
   Output Intervals = 1
 
   Steady State Min Iterations = 1
@@ -49,7 +48,7 @@ Simulation
 
   Restart File = "../TG_S1/Mesh/$restart$.result"
   !Restart File = $restart
-  !Restart Time = Real 2015.0 !DOESN'T SEEM TO MAKE A DIFFERENCE DURING TESTING
+  !Restart Time = Real 2015.0 
   Restart Position = 0
 
   Restart Before Initial Conditions = Logical True
@@ -97,7 +96,6 @@ Initial Condition 1
   FS lower = Variable thickness, bed
     Real lua "floatLower(tx[0],tx[1])"
 
-!  Temperature = Equals temp_c ! temp_c was read in previously from Greve's input
    Temperature = Variable temp_c
      Real lua "K2C(tx[0])"
 
@@ -112,6 +110,8 @@ Body Force 1
   Flow BodyForce 1 = Real 0.0
   Flow BodyForce 2 = Real 0.0
   Flow BodyForce 3 = Real #gravity
+  Velocity 1 = Real 0.0 
+  Velocity 2 = Real 0.0
 End
 
 Body Force 2
@@ -125,17 +125,17 @@ End
 Body Force 3
   FS upper Accumulation Flux 1 = Real 0.0e0
   FS upper Accumulation Flux 2 = Real 0.0e0
-  FS upper Accumulation Flux 3 = Equals as_perp_apl
+  FS upper Accumulation Flux 3 = Equals smbref !was set to as_perp_apl
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Material 1
 
   Density = Real #rhoi
-  Cauchy = Logical True
+  Cauchy = Logical TRUE !change to false for deviatoric
 
   ! viscosity stuff
-  !----------------
+!----------------
   Viscosity Model = String Glen
   Viscosity =  Real 1.0
 
@@ -150,16 +150,6 @@ Material 1
   Rate Factor 2 = Real #A2 
   Activation Energy 1 = Real #Q1    
   Activation Energy 2 = Real #Q2 
-
-  !Relative Temperature = Equals Temperature Homologous
-  !Temperature Heat Capacity = Variable Temp
-  !  Real lua "capacity(tx[0])*yearinsec^(2.0)"
-  !Temperature Heat Conductivity = Variable Temp
-  !  Real lua "conductivity(tx[0])*yearinsec*Pa2MPa"
-  !Temperature Upper Limit = Variable Pressure
-  !   Real lua "pressuremelting(tx[0])"
-  !Constant Temperature = Real -10.0
-  !Relative Temperature = Real -10.0
 
   Critical Shear Rate =  Real 1.0E-10
   sea level = Real #zsl
@@ -190,7 +180,7 @@ Solver 1
 
   Active Coordinate = Integer 3
   Dot Product Tolerance = Real #DPtol 
-  Minimum Height = Real #MINH
+  Minimum Height = Real #MINH 
   Top Surface Variable Name = String FS upper
   Bottom Surface Variable Name = String FS lower
   Correct Surface = Logical True
@@ -304,22 +294,15 @@ Solver 10
 
   !mandatory to save bulk stiffness matrix
   Calculate Loads = Logical True
-
   Linear System Solver = Direct
   Linear System Direct Method = mumps
   Mumps percentage increase working space = Integer 100
 
-!  Nonlinear System Max Iterations = Integer 100
-!  Nonlinear System Convergence Tolerance  = Real 1.0e-7
-!  Nonlinear System Newton After Iterations = 50
-!  Nonlinear System Newton After Tolerance = 1.0e-5
-!  Nonlinear System Reset Newton = Logical True
-
-  Nonlinear System Max Iterations = 50
+  Nonlinear System Max Iterations = 50 ! 40 in LAGS_relax_S2.sif
   Nonlinear System Convergence Tolerance  = 1.0e-5
   Nonlinear System Newton After Iterations = 500
-  Nonlinear System Newton After Tolerance = 1.0e-5
-  !Nonlinear System Relaxation Factor = 0.2
+  Nonlinear System Newton After Tolerance = 1.0e-5 ! is e-10 in  LAGS_relax_S2.sif
+  !Nonlinear System Relaxation Factor = 0.2 !0.4 is from LAGS_relax_S2.sif and commented in?
   !Nonlinear System Reset Newton = Logical True
 
   Steady State Convergence Tolerance = Real 1.0e-10
@@ -343,7 +326,7 @@ End
 
 
 Solver 11
-  !Exec solver = "Never"
+  !Exec solver = "Never" !runs as never commented in by LAGS_relax_S2.sif
   Equation = String "StressSolver"
   Procedure =  File "ElmerIceSolvers" "ComputeDevStress"
   Variable = -nooutput "Sij"
@@ -368,29 +351,29 @@ Solver 11
   Linear System Residual Output = 1
 End
 
-Solver 15
-!  Exec Solver = "Never" 
-  Equation = "EigenSR"
-  Variable = -nooutput dumy
-  Variable DOFs = 1
-  Solver Timing = Logical True
+!Solver 15
+!  Exec Solver = "Never"
+!  Equation = "EigenSR"
+!  Variable = -nooutput dumy
+!  Variable DOFs = 1
+!  Solver Timing = Logical True
 
-  Procedure = "ElmerIceSolvers" "ComputeEigenValues"
+!  Procedure = "ElmerIceSolvers" "ComputeEigenValues"
 
-! 3 Eigenvalues                                                                                          
-  Exported Variable 1 = "EigenStress"
-  EigenValue Variable Name = String "EigenStress"
-  Tensor Variable Name = String "Stress"
-  Exported Variable 1 DOFS = 3
+!! 3 Eigenvalues                                                                                          
+!  Exported Variable 1 = "EigenStress"
+!  EigenValue Variable Name = String "EigenStress"
+!  Tensor Variable Name = String "Stress"
+!  Exported Variable 1 DOFS = 3
 
-! Principal vectors (optional)                                                                           
-  Exported Variable 2 = EigenVector1
-  Exported Variable 2 DOFS = 3
-  Exported Variable 3 = EigenVector2
-  Exported Variable 3 DOFS =  3
-  Exported Variable 4 = EigenVector3
-  Exported Variable 4 DOFS = 3
-End
+!! Principal vectors (optional)                                                                           
+!  Exported Variable 2 = EigenVector1
+!  Exported Variable 2 DOFS = 3
+!  Exported Variable 3 = EigenVector2
+!  Exported Variable 3 DOFS =  3
+!  Exported Variable 4 = EigenVector3
+!  Exported Variable 4 DOFS = 3
+!End
 
 Solver 12
 ! Exec Solver = Never
@@ -407,7 +390,7 @@ Solver 12
   Linear System Convergence Tolerance = 1.0e-08
   Nonlinear System Max Iterations = 100
   Nonlinear System Min Iterations = 2
-  Nonlinear System Convergence Tolerance = 1.0e-04 
+  Nonlinear System Convergence Tolerance = 1.0e-06 !Is e-06 in LAGS_relax_S2.sif, 1.0e-04 originally here
   Steady State Convergence Tolerance = 1.0e-04
 !  Stabilization Method = Bubbles
   Stabilization Method = Stabilized
@@ -458,13 +441,29 @@ Solver 14
   Output Format = String "vtu"
   Output Directory = File #outdir
   Vtu Format = Logical True
+
+!used in Rupert's LAGS_relax_S2.sif
+!  Scalar field 1  = smbref
+!  Scalar field 2  = bmb           ! for ISMIP6 BMB
+!  Scalar field 3  = deltat_basin  ! ...
+!  Scalar field 4  = t_forcing     ! ...
+!  Scalar field 5  = bed           ! Bed machine bedrock
+!  Scalar field 6  = fs lower      ! Elmer geometry
+!  Scalar field 7  = fs upper      ! ...
+!  Scalar field 8  = thickness     ! ...
+!  Scalar field 9  = depth         ! ...
+!  Scalar field 10 = height        ! ...
+!  Scalar field 11 = groundedmask  !
+!  Scalar field 12 = beta          ! drag coefficient
+!  Scalar field 12 = q_geo         ! GHF
+!  Vector field 1  = velocity      !
 End
 
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Equation 1
-  Active Solvers (12) = 1 2 3 4 5 6 8 9 10 11 14 15
+  Active Solvers (11) = 1 2 3 4 5 6 8 9 10 11 14
 End
 
 Equation 2
@@ -483,21 +482,25 @@ End
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Boundary Condition 1
-  Name = "calving_front"
-  Target Boundaries(1)  = 2
-  External Pressure = Variable Coordinate 3
-      Real lua "sw_pressure(tx[0])"
-End
-
-Boundary Condition 2
-  Name = "inland_boundary"
-  Target Boundaries(1)  = 1 
+  Name = "inland_boudnary"
+  Target Boundaries(1) = 1
 
   Normal-Tangential Velocity = Logical True
-  Slip Coefficient 1 = Real 100.0 
+!  Velocity 1 = Real 0.0 !Setting normal velocity to zero
+!  Velocity 2 = Real 0.0
+!  Velocity 3 = Real 0.0
+  Slip Coefficient 1 = Real 10.0
   Slip Coefficient 2 = Real 0.001
   Slip Coefficient 3 = Real 0.001
 
+End
+
+Boundary Condition 2
+  Name = "calving_front"
+  Target Boundaries(1) = 2 
+
+  External Pressure = Variable Coordinate 3
+      Real lua "sw_pressure(tx[0])"
 End
 
 Boundary Condition 3
@@ -518,49 +521,21 @@ Boundary Condition 3
   FS Lower Condition = Variable GroundedMask
     Real MATC "tx + 0.5"  
 
-!  Grounding Line Definition = string "Last Grounded"
-  Grounding Line Definition = string discontinuous
+  Grounding Line Definition = string discontinuous !Should not be necessary given the approach we take here, not using slidcoeff_contact
 
-  Sliding Law = String Coulomb
-  Friction Law Sliding Coefficient = Real 4.1613e5  
-  Friction Law Post-Peak Exponent  = Real 1.0      !(q=1)
-  Friction Law Maximum Value = Real 1.0            !(C=1)
-  Friction Law PowerLaw Exponent = Real 3.0        !(m = n = 3 Glen's law) 
-  Friction Law Linear Velocity = Real 0.1 
-
-!  Sliding Law = String Budd
-!  Budd Friction Coefficient = Real #0.07/1000.0
-!  Budd Velocity Exponent = Real #m
-!  Budd Zab Exponent = Real 1.0
-!  Budd Linear Velocity = Real 0.1
-!  Budd Ocean Density = Real #rhoo
-!  Budd Gravity = Real #gravity
-!  Budd Floatation = Logical True
-
-!  Slip Coefficient 2 = Variable Coordinate 3
-!     Real Procedure "ElmerIceUSF" "SlidCoef_Contact"
-!  Slip Coefficient 3 = Variable Coordinate 3
-!     Real Procedure "ElmerIceUSF" "SlidCoef_Contact"
-
-   Slip Coefficient 2 = Variable beta, GroundedMask
-      REAL procedure "USF_CoV" "TenPowerA_masked"
-   Slip Coefficient 3 = Variable beta, GroundedMask
-      REAL procedure "USF_CoV" "TenPowerA_masked"
-
-!  Sliding Law = String weertman
-!  Weertman Friction Coefficient = Real 0.001
-!  Weertman Exponent = Real 1.0
-!  Weertman Linear Velocity = Real 1.0
+  Slip Coefficient 2 = Variable beta, GroundedMask
+     REAL procedure "USF_CoV" "TenPowerA_masked" !USF_CoV = ElmerIceUSF in Rupert's work
+  Slip Coefficient 3 = Variable beta, GroundedMask
+     REAL procedure "USF_CoV" "TenPowerA_masked"
 
   Flow Force BC = Logical True
 
   External Pressure = Variable Coordinate 3
       Real lua "sw_pressure(tx[0])"
 
-  Slip Coefficient 1 = Variable Coordinate 3
+  Slip Coefficient 1 = Variable Coordinate 3 ! Real 0.1 
     Real Procedure "ElmerIceUSF" "SeaSpring"
   Compute Sea Spring = Logical True
-
 End
 
 Boundary Condition 4

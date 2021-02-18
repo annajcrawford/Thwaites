@@ -2,6 +2,7 @@ batch*
 *txt
 ./TG_S0/vtuoutputs/*vtu
 ./TG_S1/vtuoutputs/*vtu
+./TG_S1/results/*
 ./TG_S2/vtuoutputs/*vtu
 ./TG_S2/vtuoutputs/originalts/*vtu
 ./TG_S3/vtuoutputs/*vtu
@@ -15,6 +16,7 @@ Mesh/*
 *~
 *result*
 ./mesh2D_TG_refpart/partitioning.128/*part*
+./mesh2D_TG_refpart/partitioning.128/*
 *vtu
 *.so
 *.F90

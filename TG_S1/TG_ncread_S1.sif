@@ -1,4 +1,4 @@
-!---LUA BEGIN
+!--LUA BEGIN
 ! assert(loadfile('../COLD.lua'))()
 ! assert(loadfile('../PIG.lua'))()
 !---LUA END
@@ -36,7 +36,7 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Equation 1
-  Active Solvers(6) = 1 2 3 4 5 6
+  Active Solvers(7) = 1 2 3 4 5 6 7
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -107,7 +107,7 @@ Solver 3
 End
 
 Solver 4 
-  Exec solver = "before all"
+ ! Exec solver = "before all" !commented out by Rupert in /LAGSS2_S1/LAGS_init_S1.sif
   Equation = "Read GHF"
   Procedure = "GridDataReader" "GridDataReader"
    
@@ -147,6 +147,22 @@ Solver 5
 End
 
 Solver 6
+  Exec Solver = before all
+  equation = "Read surface mass balance"
+  procedure = "GridDataReader" "GridDataReader"
+  Filename = File #SMB_DATA#
+
+  X Dim Name = String "nx"
+  Y Dim Name = String "ny"
+  X Var Name = String "x_coord"
+  Y Var Name = String "y_coord"
+  Epsilon X = Real 1.0e-2
+  Epsilon Y = Real 1.0e-2
+  Variable 1 = smbref
+  Enable Scaling = Logical False
+End
+
+Solver 7
   Exec Solver = String "after timestep"
   Equation = String "ResultOutput"
   Procedure = File "ResultOutputSolve" "ResultOutputSolver"

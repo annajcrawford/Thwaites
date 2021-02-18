@@ -5,7 +5,7 @@ meshdb = "../mesh2D_TG_refpart/"
 
 
 -- ## Min threshold value for Ice thickness (Real)
-MINH = 1.0
+MINH = 11.0
 
 -- ## levels in the vertical
 MLEV = 15
@@ -42,7 +42,7 @@ H_err=35.0
 -- ## mesh size limits in different regions
 
 -- ## absolute minimum mesh size
-Mminfine=600.0
+Mminfine=500.0
 
 -- ## minimum mesh size far from grounding line (may be higher than
 -- ## Mminfine to prevent detailed refinement in slow flowing far 
