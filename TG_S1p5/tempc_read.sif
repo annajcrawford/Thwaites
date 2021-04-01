@@ -1,0 +1,201 @@
+!--LUA BEGIN
+! assert(loadfile('../COLD.lua'))()
+! assert(loadfile('../PIG.lua'))()
+!---LUA END
+
+$name = "readnc_tempc_transient"
+$restart = "readnc_not"
+
+Header
+  Mesh DB "." "#meshdb#"
+End
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Simulation  
+  Coordinate System = Cartesian 3D
+  Simulation Type = "Transient"
+  Timestepping Method = "bdf"
+  BDF Order = 1
+
+  TimeStep intervals = 1
+  TimeStep Sizes = 0.1
+  Output Intervals = 1
+
+  Steady State Min Iterations = 1
+  Steady State Max Iterations = 1
+
+  Output File = "$name$.result"
+
+  Restart File = "../TG_S1/results/$restart$.result"
+  Restart Position = 0
+  Restart Before Initial Conditions = Logical True
+
+  Initialize Dirichlet Conditions = Logical False
+  Extruded Mesh Levels = Integer #MLEV
+  Extruded Mesh Density = Variable Coordinate 1
+    Real MATC "1.0+2.5*tx"
+  max output level = 9
+End
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Body 1
+  Name = "IceSheet"
+  Equation = 1
+  Material = 1
+  Initial Condition = 1
+End
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Equation 1
+  Active Solvers(4) = 1 2 3 4
+End
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Material 1
+  Density = 1000.0 !dummy
+End
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Solver 1
+  Equation = "DummyRoutine"
+  Procedure = File "DummySolver" "DummySolver"
+  Exec Solver = "Before all" 
+  Variable = -nooutput dummyV
+  Variable Output = False
+  Exported Variable 1 = -dofs 1 "vobs"
+  Exported Variable 2 = -dofs 1 "vx"
+  Exported Variable 3 = -dofs 1 "vy"
+  Exported Variable 4 = -dofs 1 "surface"
+  Exported Variable 5 = -dofs 1 "bed"
+  Exported Variable 6 = -dofs 1 "thickness"
+  Exported Variable 7 = -dofs 1 "beta"
+  Exported Variable 8 = -dofs 1 "smbref"
+  Exported Variable 9 = -dofs 1 "q_geo"
+  Exported Variable 10 = -dofs 1 "as_perp_apl"
+  Exported Variable 11 = -dofs 2 "dvu"
+End
+
+Solver 2
+ ! Exec solver = "before timestep" 
+  Equation = "HeightDepth" !"StructuredProjectToPlane"
+  Procedure = "StructuredProjectToPlane" "StructuredProjectToPlane"
+  Active Coordinate = Integer 3
+
+  Operator 1 = depth   
+  Operator 2 = height   
+  Operator 3 = thickness
+
+  Project to Everywhere = Logical True
+  Variable 1 = vobs
+  Operator 1 = bottom
+  Target Variable 1 = "proj_vobs"
+  Target Variable 1 Everywhere = Logical True
+
+  Variable 2 = vx
+  Operator 2 = bottom
+  Target Variable 2 = "proj_vx"
+  Target Variable 2 Everywhere = Logical True
+
+  Variable 3 = vy
+  Operator 3 = bottom
+  Target Variable 3 = "proj_vy"
+  Target Variable 3 Everywhere = Logical True
+
+  Variable 4 = beta
+  Operator 4 = bottom
+  Target Variable 4 = "proj_beta"
+  Target Variable 4 Everywhere = Logical True
+
+  Variable 5 = smbref
+  Operator 5 = bottom
+  Target Variable 5 = "proj_smbref"
+  Target Variable 5 Everywhere = Logical True
+
+  Variable 6 = bed
+  Operator 6 = bottom
+  Target Variable 6 = "proj_bed"
+  Target Variable 6 Everywhere = Logical True
+
+  Variable 7 = dvu
+  Operator 7 = bottom
+  Target Variable 7 = "proj_dvu"
+  Target Variable 7 Everywhere = Logical True
+
+  Variable 8 = surface
+  Operator 8 = bottom
+  Target Variable 8 = "proj_surf"
+  Target Variable 8 Everywhere = Logical True
+
+  Variable 9 = thickness
+  Operator 9 = bottom
+  Target Variable 9 = "proj_thickness"
+  Target Variable 9 Everywhere = Logical True
+
+End
+
+Solver 3
+  Exec solver = before timestep
+  Equation = "read Greve temperature"
+  Procedure = "GridDataReader" "GridDataReader"
+  Filename = File #datadir#"/ant08_b2_future25-06_hist0001.nc"
+
+  Read full array = Logical False
+!  Read full array = Logical True
+
+  X Dim Name = File "x"
+  Y Dim Name = File "y"
+  Z Dim Name = File "zeta_c"
+
+  X Var Name = File "x"
+  Y Var Name = File "y"
+  Z Var Name = File "sigma_level_c"
+
+  X Epsilon  = Real 1.0e-4 
+  Y Epsilon  = Real 1.0e-4 
+  Z Epsilon  = Real 1.0e-4
+
+  Variable 1 = File "temp_c"
+  Interpolation Offset = Real 273.15
+End
+
+Solver 4
+  !Exec Solver = String "after saving"
+  Equation = String "ResultOutput"
+  Procedure = File "ResultOutputSolve" "ResultOutputSolver"
+  Output Directory = File #outdir
+  Output File Name = File $name
+  Output Format = String "vtu"
+  Save Geometry Ids = Logical True
+  Vtu Format = Logical True
+
+  !Scalar field 1  = vobs
+  !Scalar field 2  = vx
+  !Scalar field 3  = vy
+  !Scalar field 4  = surface 
+  !Scalar field 5  = bed     
+  !Scalar field 6  = thickness 
+  !Scalar field 7 = beta      
+  !Scalar field 8 = smbref  
+  !Scalar field 9 = q_geo      
+  !Scalar field 10 = as_perp_apl
+  Scalar field 1 = temp_c
+  Scalar field 2 = depth
+  Scalar field 3 = height
+  Scalar field 4 = thickness
+  Scalar field 5 = proj_vobs
+  Scalar field 6 = proj_vx
+  Scalar field 7 = proj_vy
+  Scalar field 8 = proj_surface	
+  Scalar field 9 = proj_bed
+  Scalar field 10 = proj_thickness
+  Scalar field 11 = proj_beta
+  !Vector field 1 = dvu      
+  Vector field 1 = proj_dvu
+End
+
+

@@ -361,3 +361,6 @@ function initbeta(slc)
   return  math.log(dummy)
 end  
 
+function IfThenElse(condition,t,f) 
+   if condition then return t else return f end 
+ end 

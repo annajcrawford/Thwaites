@@ -5,8 +5,8 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !---LUA BEGIN
-! assert(loadfile('./PIG.lua'))()
-! assert(loadfile('./COLD.lua'))()
+! assert(loadfile('../PIG.lua'))()
+! assert(loadfile('../COLD.lua'))()
 !---LUA END                                                                   
 
 Header
@@ -307,7 +307,7 @@ Boundary Condition 1
 End
 
 Boundary Condition 2
-  Target Boundaries(1) = 2
+  Target Boundaries(2) = 2, 3
   distB = Real 0.0
 End
 
