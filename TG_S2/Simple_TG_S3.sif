@@ -33,8 +33,8 @@ Simulation
   Extruded Mesh Density = Variable Coordinate 1
     Real MATC "1.0 + 2.5 * tx"
 
-  Steady State Min Iterations = 10
-  Steady State Max Iterations = 300
+  Steady State Min Iterations = 1
+  Steady State Max Iterations = 1
 
   OutPut File = "$name$_.result"
   Output Intervals = 1
@@ -248,7 +248,7 @@ Boundary Condition 2
 End
 
 Boundary Condition 3
-  Name= "bed" mandatory to compute regularistaion term of the cost function (int (dbeta/dx) 2)
+  Name= "bed" ! mandatory to compute regularistaion term of the cost function (int (dbeta/dx) 2)
   Body ID = 1
 
   Mass Consistent Normals = logical True
@@ -268,9 +268,9 @@ Boundary Condition 3
   Compute Sea Spring = Logical True
 
   Slip Coefficient 2 = Variable GroundedMask 
-     Real LUA "IfThenElse((tx[0] > 0), 10e-4, 0.0)" !1.0e-03,1.0e-08)"
+     Real LUA "IfThenElse((tx[0] > 0), 10e-04, 0.0)" !1.0e-03,1.0e-08)"
   Slip Coefficient 3 = Variable GroundedMask
-     Real LUA "IfThenElse((tx[0] > 0), 10e-4, 0.0)" !1.0e-03,1.0e-08)"
+     Real LUA "IfThenElse((tx[0] > 0), 10e-04, 0.0)" !1.0e-03,1.0e-08)"
   !Slip Coefficient derivative = Real 0.0
 
 !!!BRING BACK IN WHEN READY FOR INVERSION.

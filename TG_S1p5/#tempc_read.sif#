@@ -1,4 +1,4 @@
-!--LUA BEGIN
+1;5202;0c!--LUA BEGIN
 ! assert(loadfile('../COLD.lua'))()
 ! assert(loadfile('../PIG.lua'))()
 !---LUA END

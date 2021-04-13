@@ -4,8 +4,8 @@ TG_S1/dV_TG_S1.sif = 2D grid data read-in, calculation of velocity gradient (dvu
 
 TG_S1p5/tempc_read.sif = 3D temperture read-in, bring forward 2D data read in previously and project to 3D
 
-TG_S2/Simple2SR.sif = evidence that enhancement factor makes a large difference to ice tongue speeds
-results in relatively realistic ice tongue velocity, with speeds that increase over the time of the run. 
+TG_S2/Simple2SR.sif = evidence that enhancement factor makes a large difference to ice tongue speeds. This results in relatively realistic ice tongue velocity, with speeds that increase over the time of the run. 
+
 This sif assigns an enhancement factor based on the velocity gradient (dvu_ext), which is the recalculated dvu from TG_S1
 after the projection through the medium in TG_S1p5 of vu and vx (proj_vu, proj_vx). 
 

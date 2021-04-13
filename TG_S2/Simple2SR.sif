@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_SR_GEF"
+$name="TG_dV_SR_GEF_readout"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -25,20 +25,23 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Simulation
   Coordinate System  = Cartesian 3D 
-  Simulation Type = Transient !Steady State
+  Simulation Type = Transient
+  Timestepping Method = "bdf" !added April 12
+  BDF Order = 1 !Added April 12
 
   Timestep Intervals = 2
   TimeStep Size = 0.00014 !1 hr CAN ADD TIME EVOLUTION
+  Output Intervals = 1
 
   Extruded Mesh Levels = #MLEV
   Extruded Mesh Density = Variable Coordinate 1
     Real MATC "1.0 + 2.5 * tx"
 
-  Steady State Min Iterations = 10
-  Steady State Max Iterations = 300
+  Steady State Min Iterations = 1
+  Steady State Max Iterations = 1
 
-  OutPut File = "$name$_.result"
-  Output Intervals = 1
+  Post File = "$name$.result" !bring back to Output File? 
+  !Post File = "$name$_.vtu"
 
   Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
   Restart Position = 0
@@ -98,6 +101,7 @@ Material 1
   Viscosity = 1.0 ! Dummy but avoid warning output
 
   Glen Exponent = Real 3.0
+  !Glen Enhancement Factor = Real 1.0
   Glen Enhancement Factor = Variable dvu_ext
     Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
  
@@ -128,13 +132,22 @@ End
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 Solver 1
   Equation = "DummyRoutine"
   Procedure = File "DummySolver" "DummySolver"
-  Exec Solver = "Before all"
+  Exec Solver = "never" !"Before all"
   Variable = -nooutput dummyV
   Variable Output = False
-  Exported Variable 1 = -dofs 2 "proj_dvu"
+  Exported Variable 1 = -dofs 1 "proj_bed
+  Exported Variable 2 = -dofs 1 "proj_beta"
+  Exported Variable 3 = -dofs 2 "proj_dvu"
+  Exported Variable 4 = -dofs 1 "proj_thickness"
+  Exported Variable 5 = -dofs 1 "proj_vobs"
+  Exported Variable 6 = -dofs 1 "proj_vx"
+  Exported Variable 7 = -dofs 1 "proj_vy"
+  Exported Variable 8 = -dofs 1 "temp_c"
+  Exported Variable 9 = -dofs 1 "thickness
 End
 
 Solver 2
@@ -238,11 +251,11 @@ Solver 8
   !---------------------------------------------
   Steady State Convergence Tolerance = Real 1.0e-8  
 
-  Exported Variable 1 = -dofs 1 "FS Upper"
-  Exported Variable 2 = -dofs 1 "FS Lower"
-  Exported Variable 3 = -dofs 1 "Temperature"
-  Exported Variable 4 = -dofs 1 "dvu_ext"
-  !Exported Variable 5 = -dofs 1 "glen enhancement factor"
+  !Exported Variable 1 = -dofs 1 "FS Upper"
+  !Exported Variable 2 = -dofs 1 "FS Lower"
+  Exported Variable 1 = -dofs 1 "Temperature"
+  Exported Variable 2 = -dofs 1 "dvu_ext"
+  Exported Variable 3 = -dofs 1 "glen enhancement factor"
 End
 
 Solver 9
@@ -328,28 +341,41 @@ Solver 11
 End
 
 Solver 12
-   !Exec Solver = after timestep
+   Exec Solver = after timestep
    Procedure = File "SaveData" "SaveMaterials"
-   Parameter 1 = String Glen Enhancement Factor
+   Parameter 1 = String glen enhancement factor
 End
 
 Solver 13
-!  Exec Solver = String "never"
-!  Exec Solver = String "after timestep"
   Equation = String "ResultOutput"
   Procedure = File "ResultOutputSolve" "ResultOutputSolver"
   Save Geometry Ids = Logical True
   Output File Name = File $name
   Output Format = String "vtu"
   Output Directory = File "./vtuoutputs"
-  !Output Directory = File "./tmp_tz"
   Vtu Format = Logical True
+  
+  Scalar Field 1  = bed
+  Scalar Field 2  = depth
+  Scalar Field 3  = fs upper
+  Scalar Field 4  = fs lower
+  Scalar Field 5  = groundedmask
+  Scalar Field 6 = height
+  Scalar Field 7 = proj_beta
+  Scalar Field 8 = proj_vobs
+  Scalar Field 9 = proj_vx
+  Scalar Field 10 = proj_vy
+  Scalar Field 11 = surface
+  Scalar Field 12 = proj_thickness
+  Scalar Field 13 = glen enhancement factor   
+  Vector Field 1 = proj_dvu !if need, may need to write out as proj_dvu 1 and proj_dvu 2
+  Vector Field 2 = velocity 
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Equation 1
-  Active Solvers (9) = 1 2 3 4 6 8 9 12 13   
+  Active Solvers (9) = 1 2 3 4 6 8 9 12 13
 End
 
 Equation 2
