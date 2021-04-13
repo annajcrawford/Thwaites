@@ -38,7 +38,8 @@ Simulation
   Output Intervals = 1
 
 !  Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
-  Restart File = "../TG_S2/results/tg_dv_sr_gef.result"
+  Restart File = "../TG_S2/results/TG_dV_SR_GEF_readout.result"
+  Restart Position = 0
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
 

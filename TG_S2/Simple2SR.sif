@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_SR_GEF_readout"
+$name="TG_dV_GEF"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -40,7 +40,7 @@ Simulation
   Steady State Min Iterations = 1
   Steady State Max Iterations = 1
 
-  Post File = "$name$.result" !bring back to Output File? 
+  Output File = "$name$.result" 
   !Post File = "$name$_.vtu"
 
   Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
