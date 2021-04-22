@@ -1,0 +1,59 @@
+ ******** M1QN3 Output file ************
+04/14/2021     18:15:12
+ *****************************************
+ -------------------------------------------------------------------------------
+ M1QN3 Copyright (C) 2008, J. Ch. Gilbert, Cl. Lemarechal.
+ -------------------------------------------------------------------------------
+ This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+ are welcome to redistribute it under certain conditions. See the file COPYING 
+ in the root directory of the M1QN3 distribution for details.
+ -------------------------------------------------------------------------------
+
+ M1QN3 (Version 3.3, October 2009): entry point
+     dimension of the problem (n):         44529
+     absolute precision on x (dxmin):          1.00D-10
+     expected decrease for f (df1):            7.04D+06
+     relative precision on g (epsg):           1.00D-06 (dfn-norm)
+     maximal number of iterations (niter):   300
+     maximal number of simulations (nsim):   300
+     printing level (impres):                  5
+     reverse communication
+
+ m1qn3: Scalar Initial Scaling mode
+
+     allocated memory (ndz) :  1914777
+     used memory :             1914767
+     number of updates :            20
+     (y,s) pairs are stored in core memory
+
+ m1qn3: cold start
+
+     f             =  1.40744765D+07
+     dfn-norm of g =  8.08159950D+05
+
+ m1qn3a: descent direction -g: precon =  0.215D-04
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 1, simul 1, f= 1.40744765D+07, h'(0)=-1.40745D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-1.407D+07 d2= 3.03D+02  tmin= 6.02D-11 tmax= 1.00D+20
+     mlis3                                      1.000D+00  1.081D+08  2.303D+08
+     mlis3     5.760D-02 -4.053D+05  3.533D-07
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.134D-08
+
+ m1qn3: stopping criterion on g:  3.03708D+01
+
+ m1qn3: descent direction d: angle(-g,d) =  88.1 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 2, simul 3, f= 1.36691424D+07, h'(0)=-8.09790D+05
+
+ m1qn3: line search
+
+     mlis3       fpn=-8.098D+05 d2= 1.01D+00  tmin= 1.05D-09 tmax= 1.00D+20

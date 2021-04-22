@@ -51,7 +51,7 @@ End
 Material 1
   Density = 1000.0 ! just a dummy, but we need a material with a densityt to run
 End
-	
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Solver 1 
   Exec Solver = "before all" 

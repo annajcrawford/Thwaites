@@ -1,0 +1,58 @@
+ ******** M1QN3 Output file ************
+04/19/2021     19:02:54
+ *****************************************
+ -------------------------------------------------------------------------------
+ M1QN3 Copyright (C) 2008, J. Ch. Gilbert, Cl. Lemarechal.
+ -------------------------------------------------------------------------------
+ This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+ are welcome to redistribute it under certain conditions. See the file COPYING 
+ in the root directory of the M1QN3 distribution for details.
+ -------------------------------------------------------------------------------
+
+ M1QN3 (Version 3.3, October 2009): entry point
+     dimension of the problem (n):         44529
+     absolute precision on x (dxmin):          1.00D-10
+     expected decrease for f (df1):            9.35D-21
+     relative precision on g (epsg):           1.00D-06 (dfn-norm)
+     maximal number of iterations (niter):   300
+     maximal number of simulations (nsim):   300
+     printing level (impres):                  5
+     reverse communication
+
+ m1qn3: Scalar Initial Scaling mode
+
+     allocated memory (ndz) :  1914777
+     used memory :             1914767
+     number of updates :            20
+     (y,s) pairs are stored in core memory
+
+ m1qn3: cold start
+
+     f             =  1.86966363D-20
+     dfn-norm of g =  5.46609345D-06
+
+ m1qn3a: descent direction -g: precon =  0.626D-09
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 1, simul 1, f= 1.86966363D-20, h'(0)=-1.86966D-20
+
+ m1qn3: line search
+ mlis3: initial step-size increased to tmin
+
+     mlis3       fpn=-1.870D-20 d2= 1.17D-29  tmin= 1.81D+05 tmax= 1.00D+20
+     mlis3                                      1.807D+05  3.692D-10  4.088D-15
+     mlis3                                      1.807D+03  3.691D-14  4.087D-17
+
+     mlis3   stop on tmin     stepsizes           functions        derivatives
+     mlis3                  0.00000000D+00   1.86966363198162D-20  -1.8697D-20
+     mlis3                  1.80663372D+03   3.69143852507827D-14   4.0870D-17
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: output mode is  6
+     number of iterations:              1
+     number of simulations:             3
+     realized relative precision on g:  1.00D+00
+     f             =  3.69143853D-14
+     dfn-norm of g =  1.37579764D-02

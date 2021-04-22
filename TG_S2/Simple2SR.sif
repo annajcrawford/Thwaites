@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_GEF"
+$name="TG_dV_GEF_InvDev"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -368,6 +368,9 @@ Solver 13
   Scalar Field 11 = surface
   Scalar Field 12 = proj_thickness
   Scalar Field 13 = glen enhancement factor   
+  Scalar Field 14 = temperature
+  Scalar Field 15 = pressure
+  Scalar Field 16 = thickness
   Vector Field 1 = proj_dvu !if need, may need to write out as proj_dvu 1 and proj_dvu 2
   Vector Field 2 = velocity 
 End

@@ -27,6 +27,9 @@ Q1 = 60.0e3
 Q2 = 115.0e3
 Tlim = -10.0
 
+A = 4.6416e-25*yearinsec*1.0e18
+eta = 1.0/(2.0*A)^(1.0/n)
+
 -- ## GLToleranceInit=1.0e-1
 GLTolerance=1.0e-3
 
@@ -283,6 +286,7 @@ end
 
 -- ## inputs: TinC is temperature in Centigrade, p is pressure. 
 -- ## Returns temperature relative to pressure melting point.
+-- ## CHECK - SHOULD TREL LINE BE ADDITION?
 function relativetemp(TinC,p)
   pe = p
   if (pe < 0.0) then
@@ -313,9 +317,19 @@ function initMu(TempRel)
     AF = 1.916e03 * math.exp( -139.0e03/(8.314 *  (273.15 + TempRel)))
   end
   glen = (2.0 * AF)^(-1.0/3.0)
-  viscosity = glen * yearinsec^(-1.0/3.0) * Pa2MPa
+  viscosity = glen * yearinsec^(-1.0/3.0)  * Pa2MPa
   mu = math.sqrt(viscosity)
   return mu
+end
+
+function visc(bottomEF, mu)
+  v = bottomEF * bottomEF * mu
+  return v
+end
+
+function viscd(bottomEF, mu)
+  vd = 2 * bottomEF * mu
+  return vd
 end
 
 function limitslc(slc)

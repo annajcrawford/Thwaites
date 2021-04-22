@@ -11,6 +11,9 @@ batch*
 ./TG_S1p5/old/*
 ./TG_S2/old/*
 ./TG_S3/vtuoutputs/*vtu
+./TG_S4/vtuoutputs/*vtu
+./TG_S4/*result*
+./TG_S4/*.dat
 old/*
 PROG/*
 Mesh/*
@@ -19,6 +22,7 @@ Mesh/*
 ./TG_S1/ELMERSTART*
 ./TG_S2/ELMERSTART*
 ./TG_S3/ELMERSTART*
+./TG_S4/ELMERSTART*
 *'#'*
 *~
 *result*
