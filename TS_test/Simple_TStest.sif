@@ -4,11 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_GEF_Steady"
-
-! The total cost function to minimize is J=J_u + LambdaReg * Jreg
-! where J_u=velocity error; Jreg=regularisation (smoothness)
-$LambdaReg=1.0e5
+$name="TS_comp_transient_run2"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -25,11 +21,11 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Simulation
   Coordinate System  = Cartesian 3D 
-  Simulation Type = Steady
+  Simulation Type = Transient
   Timestepping Method = "bdf" !added April 12
   BDF Order = 1 !Added April 12
 
-  Timestep Intervals = 2
+  Timestep Intervals = 1
   TimeStep Size = 0.00014 !1 hr CAN ADD TIME EVOLUTION
   Output Intervals = 1
 
@@ -37,11 +33,10 @@ Simulation
   Extruded Mesh Density = Variable Coordinate 1
     Real MATC "1.0 + 2.5 * tx"
 
-  Steady State Min Iterations = #IMIN
-  Steady State Max Iterations = #IMAX
+  Steady State Min Iterations = 1
+  Steady State Max Iterations = 1
 
   Output File = "$name$.result" 
-  !Post File = "$name$_.vtu"
 
   Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
   Restart Position = 0
@@ -65,10 +60,10 @@ Body 2
   Material = 2
 End
 
-Body 3
-  Equation = 3
-  Material = 3
-End
+!Body 3
+!  Equation = 3
+!  Material = 3
+!End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Initial Condition 1
@@ -124,11 +119,11 @@ Material 2
   Min Zs Bottom = Equals proj_bed
 End
 
-Material 3
-  Density = Real #rhoi
-  Min FS upper = variable "proj_bed"
-    Real lua "tx[0] + MINH"
-End
+!Material 3
+!  Density = Real #rhoi
+!  Min FS upper = variable "proj_bed"
+!    Real lua "tx[0] + MINH"
+!End
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -189,6 +184,7 @@ Solver 4
 End
 
 Solver 5
+  !Exec Solver = Never
   Exec Solver = Before all !Was before simulation
   Equation = "GroundedMask"
   Procedure = "ElmerIceSolvers" "GroundedSolver"
@@ -209,7 +205,7 @@ Solver 6
 End
 
 Solver 7
-!  Exec solver = never
+  Exec solver = never
   Equation = Fw
   Procedure = "ElmerIceSolvers" "GetHydrostaticLoads"
   Variable = Fw[Fwater:3]
@@ -251,102 +247,14 @@ Solver 8
   !---------------------------------------------
   Steady State Convergence Tolerance = Real 1.0e-8  
 
-  !Exported Variable 1 = -dofs 1 "FS Upper"
-  !Exported Variable 2 = -dofs 1 "FS Lower"
-  Exported Variable 1 = -dofs 1 "Temperature"
-  Exported Variable 2 = -dofs 1 "dvu_ext"
-  Exported Variable 3 = -dofs 1 "glen enhancement factor"
+  Exported Variable 1 = -dofs 1 "FS upper"
+  Exported Variable 2 = -dofs 1 "FS lower"
+  Exported Variable 3 = -dofs 1 "Temperature"
+  Exported Variable 4 = -dofs 1 "dvu_ext"
+  Exported Variable 5 = -dofs 1 "glen enhancement factor"
 End
 
 Solver 9
-  !Exec solver = "Never" !runs as never commented in by LAGS_relax_S2.sif
-  Equation = String "StressSolver"
-  Procedure =  File "ElmerIceSolvers" "ComputeDevStress"
-  Variable = -nooutput "Sij"
-  Variable DOFs = 1
-  Flow Solver Name = String "Flow Solution"
-  Stress Variable Name = String "Stress"
-  Exported Variable 1 = "Stress" ! [Sxx, Syy, Szz, Sxy] in 2D
-                                 ! [Sxx, Syy, Szz, Sxy, Syz, Szx] in 3D
-  Exported Variable 1 DOFs = 6   ! 4 in 2D, 6 in 3D
-
-  Linear System Solver = "Iterative"
-!  Linear System Solver = "Direct"
-!  Linear System Direct Method = MUMPS
-
-  Linear System Iterative Method = "BiCGStab"
-!  Linear System Iterative Method = "BiCGStabl"
-  Bicgstabl Polynomial Degree = 4
-  Linear System Max Iterations = 300
-  Linear System Convergence Tolerance = 1.0E-07
-  Linear System Abort Not Converged = True
-  Linear System Preconditioning = "ILU1"
-  Linear System Residual Output = 1
-End
-
-Solver 10
-! Exec Solver = Never
-  Exec Solver = "After TimeStep"
-  Equation =  String "Lower Free Surface"
-  Variable = "FS lower"
-  Variable DOFs = 1
-  Procedure = "FreeSurfaceSolver" "FreeSurfaceSolver"
-  Apply Dirichlet = Logical True
-  Linear System Solver = Iterative
-  Linear System Iterative Method = BiCGStab
-  Linear System Max Iterations  = 500
-  Linear System Preconditioning = ILU1
-  Linear System Convergence Tolerance = 1.0e-08
-  Nonlinear System Max Iterations = 100
-  Nonlinear System Min Iterations = 2
-  Nonlinear System Convergence Tolerance = 1.0e-06 !Is e-06 in LAGS_relax_S2.sif, 1.0e-04 originally
-!Steady State Convergence Tolerance = 1.0e-04 !CHECK IF THIS IS NEEDED!
-!  Stabilization Method = Bubbles
-  Stabilization Method = Stabilized
-  Flow Solution Name = String "Flow Solution"
-  Use Accumulation = Logical True
-!  Normal Flux = Logical False
-  Exported Variable 1 = FS lower Residual
-  Exported Variable 1 DOFS = 1
-  Exported Variable 2 = ReferenceFS lower
-  Exported Variable 2 DOFS = 1
-End
-
-Solver 11
-!  Exec Solver = Never
-  Exec Solver = "After TimeStep"
-  Equation =  String "Upper Free Surface"
-  Variable = "FS upper"
-  Variable DOFs = 1
-  Procedure = "FreeSurfaceSolver" "FreeSurfaceSolver"
-  Apply Dirichlet = Logical True
-  Linear System Solver = Iterative
-  Linear System Iterative Method = BiCGStab
-  Linear System Max Iterations  = 500
-  Linear System Preconditioning = ILU1
-  Linear System Convergence Tolerance = 1.0e-08
-  Nonlinear System Max Iterations = 100
-  Nonlinear System Min Iterations = 2
-  Nonlinear System Convergence Tolerance = 1.0e-06
-  Steady State Convergence Tolerance = 1.0e-4
-!  Stabilization Method = Bubbles
-  Stabilization Method = Stabilized
-  Flow Solution Name = String "Flow Solution"
-  Use Accumulation = Logical True
-  Normal Flux = Logical False
-  Exported Variable 1 =  FS upper Residual
-  Exported Variable 1 DOFS = 1
-  Exported Variable 2 = ReferenceFS upper
-  Exported Variable 2 DOFS = 1
-End
-
-Solver 12
-   Exec Solver = after timestep
-   Procedure = File "SaveData" "SaveMaterials"
-   Parameter 1 = String glen enhancement factor
-End
-
-Solver 13
   Equation = String "ResultOutput"
   Procedure = File "ResultOutputSolve" "ResultOutputSolver"
   Save Geometry Ids = Logical True
@@ -378,20 +286,20 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Equation 1
-  Active Solvers (9) = 1 2 3 4 6 8 9 12 13
+  Active Solvers (8) = 1 2 3 4 5 6 8 9
 End
 
 Equation 2
-  Active Solvers (3) = 5 7 10 
+  Active Solvers (1) =  7 
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
 
-Equation 3
-  Active Solvers (1) = 11 
-  Convection = Computed
-  Flow Solution Name = String "Flow Solution"
-End
+!Equation 3
+!  Active Solvers (1) = 
+!  Convection = Computed
+!  Flow Solution Name = String "Flow Solution"
+!End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Boundary Condition 1
@@ -474,7 +382,7 @@ End
 ! Upper Surface
 Boundary Condition 4
   Name= "Surface" mandatory to compute cost function
-  Body Id = 3
+  !Body Id = 3
   Depth = Real 0.0
   FS upper = Variable proj_thickness,proj_bed
      Real lua "floatUpper(tx[0],tx[1])"

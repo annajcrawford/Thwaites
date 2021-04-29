@@ -13,7 +13,7 @@ batch*
 ./TG_S3/vtuoutputs/*vtu
 ./TG_S4/vtuoutputs/*vtu
 ./TG_S4/*result*
-./TG_S4/*.dat
+./TG_S4/*dat
 old/*
 PROG/*
 Mesh/*

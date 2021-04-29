@@ -4,11 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_GEF_Steady"
-
-! The total cost function to minimize is J=J_u + LambdaReg * Jreg
-! where J_u=velocity error; Jreg=regularisation (smoothness)
-$LambdaReg=1.0e5
+$name="TS_test_Steady"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -29,7 +25,7 @@ Simulation
   Timestepping Method = "bdf" !added April 12
   BDF Order = 1 !Added April 12
 
-  Timestep Intervals = 2
+  Timestep Intervals = 1
   TimeStep Size = 0.00014 !1 hr CAN ADD TIME EVOLUTION
   Output Intervals = 1
 
@@ -37,11 +33,10 @@ Simulation
   Extruded Mesh Density = Variable Coordinate 1
     Real MATC "1.0 + 2.5 * tx"
 
-  Steady State Min Iterations = #IMIN
-  Steady State Max Iterations = #IMAX
+  Steady State Min Iterations = 1
+  Steady State Max Iterations = 1
 
   Output File = "$name$.result" 
-  !Post File = "$name$_.vtu"
 
   Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
   Restart Position = 0

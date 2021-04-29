@@ -1,0 +1,48 @@
+ ******** M1QN3 Output file ************
+04/22/2021     19:51:44
+ *****************************************
+ -------------------------------------------------------------------------------
+ M1QN3 Copyright (C) 2008, J. Ch. Gilbert, Cl. Lemarechal.
+ -------------------------------------------------------------------------------
+ This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+ are welcome to redistribute it under certain conditions. See the file COPYING 
+ in the root directory of the M1QN3 distribution for details.
+ -------------------------------------------------------------------------------
+
+ M1QN3 (Version 3.3, October 2009): entry point
+     dimension of the problem (n):         89058
+     absolute precision on x (dxmin):          1.00D-10
+     expected decrease for f (df1):            2.80D+10
+     relative precision on g (epsg):           1.00D-06 (dfn-norm)
+     maximal number of iterations (niter):   300
+     maximal number of simulations (nsim):   300
+     printing level (impres):                  5
+     reverse communication
+
+ m1qn3: Scalar Initial Scaling mode
+
+     allocated memory (ndz) :  3829524
+     used memory :             3829514
+     number of updates :            20
+     (y,s) pairs are stored in core memory
+
+ m1qn3: cold start
+
+     f             =  5.59063526D+10
+     dfn-norm of g =  6.97896908D-07
+
+ m1qn3a: descent direction -g: precon =  0.115D+24
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 1, simul 1, f= 5.59063526D+10, h'(0)=-5.59064D+10
+
+ m1qn3: line search
+
+     mlis3       fpn=-5.591D+10 d2= 6.42D+33  tmin= 3.55D-27 tmax= 1.00D+20
+     mlis3                                      1.000D+00 -5.409D+06 -5.591D+10
+     mlis3     2.114D-01 -4.235D+07 -5.591D+10
+     mlis3     3.778D-01 -7.317D+07 -5.591D+10
+     mlis3     3.840D-01 -9.425D+07 -5.591D+10
+     mlis3     4.148D-01 -1.077D+08 -5.591D+10
+     mlis3     5.611D-01 -1.160D+08 -5.591D+10

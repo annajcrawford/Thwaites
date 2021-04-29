@@ -5,7 +5,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_S4_OptVisc_vd"
+$name="TG_S4_OptVisc_alpha_GEF"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -19,7 +19,9 @@ End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Constants
-  water density = Real #rhoo
+  rhoo = Real #rhoo
+  rhoi = Real #rhoi
+  gravity = Real #gravity
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -38,7 +40,7 @@ Simulation
   Output Intervals = 1
 
   Restart File = "../TG_S2/results/TG_dV_GEF.result"
-  Restart Position = 0 
+  !Restart Position = 0 
 
   Restart Variable 1  = String groundedmask
   Restart Variable 2  = String temperature
@@ -47,7 +49,8 @@ Simulation
   Restart Variable 4 = String FS upper
   Restart Variable 5 = String FS lower
   Restart Variable 6 = String proj_thickness
-  Restart Variable 7 = String alpha
+  Restart Variable 7 = String glen enhancement factor
+  !Restart Variable 7 = String alpha
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
@@ -89,10 +92,12 @@ Initial Condition 1
   mu = Variable TemperatureRel
     Real lua "initMu(tx[0])"
 
-  EF = Real 1.0     ! viscosity enhancement factor
-  bottom EF = Real 1.0
-
-  beta = Real -3.0
+  EF = Equals glen enhancement factor !Real 1.0, viscosity enhancement factor 
+  
+  bottom EF = Equals glen enhancement factor !Real 1.0
+  
+  alpha = Real -3.0
+!  beta = Real -3.0
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -189,7 +194,7 @@ Solver 3
 
 !  Nonlinear System Max Iterations = Integer 100
   Nonlinear System Max Iterations = Integer 40
-  Nonlinear System Convergence Tolerance  = Real 1.0e-4
+  Nonlinear System Convergence Tolerance  = Real 1.0e-1
   Nonlinear System Newton After Iterations = 50
   Nonlinear System Newton After Tolerance = 1.0e-5
   Nonlinear System Reset Newton = Logical True
@@ -202,7 +207,7 @@ Solver 3
   Solver Timing = Logical True
   Solver Timing Cumulative = Logical True
 
-  Exported Variable 1 = alpha
+  Exported Variable 1 = beta
   Exported Variable 1 DOFS = Integer 1
   Exported Variable 2 = -global CostValue
   Exported Variable 2 DOFS = Integer 1
@@ -215,6 +220,14 @@ Solver 3
   Exported Variable 5 DOFS = Integer 1
   Exported Variable 6 = bottom EF
   Exported Variable 6 DOFs = Integer 1
+  Exported Variable 7 = DJDBeta
+  Exported Variable 7 DOFS = Integer 1
+  Exported Variable 8 = DJDEF
+  Exported Variable 8 DOFS = Integer 1
+  Exported Variable 9 = EF
+  Exported Variable 9 DOFS = Integer 1
+  Exported Variable 10 = alpha
+  Exported Variable 10 DOFS = Integer 1
 End
 
 !!! Compute Cost function
@@ -301,7 +314,7 @@ Solver 8
   A priori Regularisation = Logical False
 
   ! The optimised variable is a vector made of EF and beta (beta is drag coef)
-  Exported Variable 1 = Var[EF:1 beta:1]
+  Exported Variable 1 = Var[EF:1 alpha:1]
   Exported Variable 1 DOFs = 2
   ! Gradient of the cost function w.r.t. EF and beta 
   Exported Variable 2 = DJDVar[sum DJDEF:1 DJDBeta:1]
@@ -317,7 +330,7 @@ Solver 9
   Adjoint Solution Name = String "Adjoint"
   Gradient Variable Name = String "DJDbeta"
 
-!  Exported Variable 1 = DJDbeta
+  Exported Variable 1 = DJDbeta
 end
 
 Solver 10 
@@ -327,7 +340,7 @@ Solver 10
   procedure = "ElmerIceSolvers" "Adjoint_CostRegSolver"
 
   Cost Filename = File "CostReg_$name$.dat"
-  Optimized Variable Name = String "Beta"
+  Optimized Variable Name = String "alpha"
   Gradient Variable Name = String "DJDBeta"
   Cost Variable Name = String "CostValue"
   Lambda = Real $LambdaReg
@@ -441,15 +454,41 @@ Boundary Condition 3
   Normal-Tangential Velocity = Logical True  
 
   Velocity 1 = Real 0.0e0
+  Velocity 1 Condition = Variable GroundedMask !Added from Simple2SR
+    Real LUA "tx[0] + 0.5"
 
-  Slip Coefficient 2 = Variable beta, GroundedMask
-     REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+  !Slip Coefficient 2 = Variable GroundedMask, alpha !Added from Simple2SR
+  !   Real LUA "IfThenElse((tx[0] > 0), 10.0**tx[1], 0.0)"
+  !Slip Coefficient 3 = Variable GroundedMask, alpha
+  !   Real LUA "IfThenElse((tx[0] > 0), 10.0**tx[1], 0.0)"
+  !Slip Coefficient derivative = Real 0.0
+   
+  Flow Force BC = Logical True !Added From Simple2SR
 
-  Slip Coefficient 3 = Variable beta, GroundedMask
-     REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+  External Pressure = Variable Coordinate 3 !Added from Simple2SR
+     Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])"  !CHANGE BACK TO SW_PRESSURE?
 
-  Slip Coefficient derivative = Variable beta, GroundedMask
-     REAL procedure "ElmerIceUSF" "TenPowerA_d_Masked"
+  Slip Coefficient 1 = Variable Coordinate 3 !ADded from Simple2SR
+     Real Procedure "ElmerIceUSF" "SeaSpring"
+  Compute Sea Spring = Logical True !Added from Simple2SR
+
+  !!!Trying Freeslip (should do the same thing as TenPowerA_masked)
+  Slip Coefficient 2  = Variable alpha
+       Real Procedure "ElmerIceUSF" "FreeSlipShelves" 
+  Slip Coefficient 3  = Variable alpha 
+       Real Procedure "ElmerIceUSF" "FreeSlipShelves" 
+  FreeSlipShelves mask name = String "GroundedMask"
+  FreeSlipShelves beta formulation = String "Power"
+
+  !!!Original
+  !Slip Coefficient 2 = Variable beta, GroundedMask
+  !   REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+
+  !Slip Coefficient 3 = Variable beta, GroundedMask
+   !  REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+
+  !Slip Coefficient derivative = Variable beta, GroundedMask
+  !   REAL procedure "ElmerIceUSF" "TenPowerA_d_Masked"
 
 End
 

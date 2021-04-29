@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_reltemp"
+$name="TG_Simple_Transient"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -60,10 +60,10 @@ End
 Initial Condition 1
   Temperature = Variable temp_c
     Real lua "K2C(tx[0])"
- FS lower = Variable thickness, bed
-    Real lua "floatLower(tx[0],tx[1])"
- FS upper = Variable thickness, bed
-  Real lua "floatUpper(tx[0],tx[1])"
+  FS lower = Variable proj_thickness, proj_bed
+     Real lua "floatLower(tx[0],tx[1])"
+  FS upper = Variable proj_thickness, proj_bed
+     Real lua "floatUpper(tx[0],tx[1])"
 !alpha = Variable GroundedMask
 !    Real MATC "(tx(0) > 0)*1.0e-03"
 
@@ -91,9 +91,9 @@ Material 1
   Viscosity = 1.0 ! Dummy but avoid warning output
   Glen Exponent = Real 3.0
 
-  !adding relative temp back in
-  Relative Temperature = Variable Temperature, Pressure
-    Real lua "relativetemp(tx[0], tx[1])"
+  !!adding relative temp back in
+  !Relative Temperature = Variable Temperature, Pressure
+   ! Real lua "relativetemp(tx[0], tx[1])"
   
   Limit Temperature = Real #Tlim
   Rate Factor 1 = Real #A1 
@@ -103,8 +103,8 @@ Material 1
   Glen Enhancement Factor = Real 1.0
   Critical Shear Rate = Real 1.0e-10
 
-  Enhancement Factor = Variable dvu
-    Real LUA "function() if (tx[0]) < 0.3) then return 1.0 else return 10.0 end end"  
+  !Enhancement Factor = Variable dvu
+    !Real LUA "function() if (tx[0]) < 0.3) then return 1.0 else return 10.0 end end"  
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -139,7 +139,7 @@ Solver 3
   Variable = GroundedMask
   Variable DOFs = 1
   Toler = Real #GLTolerance
-  Bedrock Variable = String "bed"
+  Bedrock Variable = String "proj_bed"
 End
 
 !!!! Navier-Stokes Solution
@@ -188,30 +188,8 @@ Solver 5
   Output Directory = File "./vtuoutputs"
   !Output Directory = File "./tmp_tz"
   Vtu Format = Logical True
-  !Scalar Field 1  = beta
-  Scalar Field 1  = bed
-  Scalar Field 2  = Height
-  Scalar Field 3  = Depth
-  Scalar Field 4  = FS upper
-  Scalar Field 5  = FS lower
-  !Scalar Field 7 = vx
-  !Scalar Field 8 = vy
-  Scalar Field 6 = groundedmask
-  Scalar Field 7 = surface
-  Scalar Field 8 = thickness
-  !Scalar Field 9 = smbref
-  !Scalar Field 10 = q_geo
-  !Scalar Field 11 = as_perp_apl
-  Scalar Field 9 = tempc
-  Scalar Field 10 = proj_vobs
-  Scalar Field 11 = proj_vx
-  Scalar Field 12 = proj_vy
-  Scalar Field 13 = proj_surface
-  !Scalar Field 20 = proj_bed
-  Scalar Field 14 = proj_beta
-  Vector Field 1  = Velocity 
-  !Vector Field 2 = dvu
-  Vector Field 2 = proj_dvu
+!!removed assigned output
+
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -225,9 +203,9 @@ Boundary Condition 1
   Target Boundaries(1) = 1
 
   Normal-Tangential Velocity = Logical True
-  Slip Coefficient 1 = Real 100.0
-  External Pressure = Variable depth !WHY DO WE NEED THIS
-    Real LUA "rhoi*gravity*tx[0]"   
+  Slip Coefficient 1 = Real 10.0
+  !External Pressure = Variable depth !WHY DO WE NEED THIS
+   ! Real LUA "rhoi*gravity*tx[0]"   
   Slip Coefficient 2 = Real 0.001
   Slip Coefficient 3 = Real 0.001
 End
@@ -272,39 +250,15 @@ Boundary Condition 3
   Slip Coefficient 3 = Variable GroundedMask
      Real LUA "IfThenElse((tx[0] > 0), 10e-04, 0.0)" !1.0e-03,1.0e-08)"
   !Slip Coefficient derivative = Real 0.0
-
-!!!BRING BACK IN WHEN READY FOR INVERSION.
-!!!Removes application of alpha in regions of ungrounded ice
-!  Slip Coefficient 2 = Variable alpha 
- !   REAL procedure "ElmerIceUSF" "TenPowerA"
- ! Slip Coefficient 3 = Variable alpha
- !   REAL procedure "ElmerIceUSF" "TenPowerA"
- ! Slip Coefficient derivative = Variable alpha
- !   REAL procedure "ElmerIceUSF" "TenPowerA_d"
-  
-!  Slip Coefficient 2 = Variable alpha, GroundedMask 
-!    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
-!  Slip Coefficient 3 = Variable alpha, GroundedMask
-!    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
-!  Slip Coefficient derivative = Variable alpha, GroundedMask
-!    REAL procedure "ElmerIceUSF" "TenPowerA_d_Masked" !has been USF_CoV
-
-!!  FreeSlipShelves beta formulation = String "Power"
-!! Slip Coefficient 2  = Variable alpha
-!!    Real Procedure "ElmerIceUSF" "FreeSlipShelves"
-!!  Slip Coefficient 3  = Variable alpha
-!!   Real Procedure "ElmerIceUSF" "FreeSlipShelves"
- FS lower = Variable thickness, bed
-    Real lua "floatLower(tx[0],tx[1])"
+  FS lower = Variable proj_thickness, proj_bed
+     Real lua "floatLower(tx[0],tx[1])"
 End
 
 ! Upper Surface
 Boundary Condition 4
   Name= "Surface" mandatory to compute cost function
   Body Id = 1
-  FS upper = Variable thickness, bed
+  FS upper = Variable proj_thickness, proj_bed
      Real lua "floatUpper(tx[0],tx[1])"
   !Normal-Tangential Velocity = Logical True !IS THIS AND BELOW NEEDED FOR INVERSION?I DON'T THINK SO.
-  !Slip Coefficient 1 = Variable vx, vy, velocity 1, as_perp_apl
-  !  Real procedure "USFs" "ConstrainEmergVel"
 End 

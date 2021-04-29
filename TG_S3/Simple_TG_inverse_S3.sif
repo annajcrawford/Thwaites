@@ -4,12 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_S3_noGEF_TranTest"
-
-! The total cost function to minimize is J=J_u + LambdaReg * Jreg
-! where J_u=velocity error; Jreg=regularisation (smoothness)
-$LambdaReg=1.0e5
-
+$name="TG_S3_Simple_Transient"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -26,7 +21,7 @@ Simulation
   Coordinate System  = Cartesian 3D 
   Simulation Type = Transient
  
-  Timestep Intervals = 10
+  Timestep Intervals = 1
   TimeStep Size = 0.00014 !1 hr CAN ADD TIME EVOLUTION
   Output Intervals = 1
 
@@ -40,7 +35,6 @@ Simulation
   OutPut File = "$name$_.result"
   Output Intervals = 1
 
-  !Restart File = "../TG_S2/results/TG_dV_GEF.result"
   Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
   Restart Position = 0
 
@@ -62,17 +56,12 @@ End
 ! lower surface
 Body 2
   Equation = 2
-!  Body Force = 1
   Material = 2
-!  Initial Condition = 1
 End
 
 ! upper surface
 Body 3
-  Equation = 3
-!  Body Force = 1
   Material = 3
-!  Initial Condition = 1
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -88,8 +77,8 @@ Initial Condition 1
   FS upper = Variable proj_thickness, proj_bed
     Real lua "floatUpper(tx[0],tx[1])"
 
-  dvu_ext = Variable proj_dvu 1, proj_dvu 2
-    Real lua "math.sqrt(tx[0]*tx[0] + tx[1]*tx[1] )"
+  !dvu_ext = Variable proj_dvu 1, proj_dvu 2
+   ! Real lua "math.sqrt(tx[0]*tx[0] + tx[1]*tx[1] )"
 
 End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -98,11 +87,6 @@ Body Force 1
   Flow BodyForce 1 = Real 0.0                          
   Flow BodyForce 2 = Real 0.0                          
   Flow BodyForce 3 = Real #gravity
-
-  !# Cost not computed if H<=Hmin
-  CostV Passive = Variable proj_thickness
-    Real procedure "USFs" "PassiveCond_H"
-  Passive Element Min Nodes = Integer 3
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -111,7 +95,6 @@ Material 1
   sea level = Real 0.0
 
   Density = Real #rhoi
-  !Cauchy = Logical TRUE !Didn't include this 
 
   Viscosity Model = String "glen"
   Viscosity = 1.0 ! Dummy but avoid warning output
@@ -179,20 +162,6 @@ Solver 2
 End
 
 Solver 3
- ! Exec Solver = "never"
-  Exec Solver = "Before Timestep"
-  Equation = "MapCoordinate"
-  Procedure = "StructuredMeshMapper" "StructuredMeshMapper"
-
-  Active Coordinate = Integer 3
-  Dot Product Tolerance = Real #DPtol
-  Minimum Height = Real #MINH
-  Top Surface Variable Name = String FS upper
-  Bottom Surface Variable Name = String FS lower
-  Correct Surface = Logical True
-End
-
-Solver 4
   Equation = "HeightDepth"
   Exec Solver = "Before All"
   Procedure = "StructuredProjectToPlane" "StructuredProjectToPlane"
@@ -201,36 +170,18 @@ Solver 4
   Operator 2 = height
 End
 
-Solver 5
+Solver 4
   Exec Solver = Before all !Was before simulation
   Equation = "GroundedMask"
   Procedure = "ElmerIceSolvers" "GroundedSolver"
   Variable = GroundedMask
   Variable DOFs = 1
   Toler = Real #GLTolerance
-  Bedrock Variable = String "proj_bed" !NOT IN TG_relax_S2.sif but probably needed
-End
-
-Solver 6
-!  Exec solver = never
-  Equation = "Normal Vector"
-  Procedure = "ElmerIceSolvers" "ComputeNormalSolver"
-  Variable = "Normal Vector"
-  Variable DOFs = 3
-  ComputeAll = Logical True
-  Optimize Bandwidth = Logical False
-End
-
-Solver 7
-!  Exec solver = never
-  Equation = Fw
-  Procedure = "ElmerIceSolvers" "GetHydrostaticLoads"
-  Variable = Fw[Fwater:3]
-  Variable DOFs = 3
+  Bedrock Variable = String "proj_bed"
 End
 
 !!!! Navier-Stokes Solution
-Solver 8
+Solver 5
   Equation = "Navier-Stokes"  
   Stabilization Method = String Stabilized
   Flow Model = Stokes
@@ -245,11 +196,11 @@ Solver 8
   Mumps percentage increase working space = Integer 60
 
   Nonlinear System Max Iterations = Integer 50
-  Nonlinear System Convergence Tolerance  = Real 1.0e-3
+  Nonlinear System Convergence Tolerance  = Real 1.0e-2
   Nonlinear System Newton After Iterations = 50
   Nonlinear System Newton After Tolerance = 1.0e-5
   Nonlinear System Reset Newton = Logical True
-!  Nonlinear System Relaxation Factor = 0.5
+  Nonlinear System Relaxation Factor = 0.5
 
   Steady State Convergence Tolerance = Real 1.0e-10
 
@@ -260,144 +211,18 @@ Solver 8
   Solver Timing Cumulative = Logical True
 
 ! square root of the slip coef
-  Exported Variable 1 = alpha
-  Exported Variable 1 DOFS = Integer 1
-! derivative of the cost fn wr to alpha
-  Exported Variable 2 = -nooutput DJDBeta
-  Exported Variable 2 DOFS = Integer 1
-! value of the cost function
-  Exported Variable 3 = -global CostValue
-  Exported Variable 3 DOFS = Integer 1
-! Variable used to force the adjoint system/update in CostSolver
-  Exported Variable 4 = -nooutput Velocityb
-  Exported Variable 4 DOFs = Integer 4
-  Exported Variable 5 = proj_beta
-  Exported Variable 5 DOFs = Integer 1
-  Exported Variable 6 = dvu_ext
-  Exported Variable 6 DOFS = Integer 1
-  Exported Variable 7 = Glen Enhancement Factor
-  Exported Variable 7 DOFS = Integer 1
-  Exported Variable 8 = -dofs 1 "FS upper"
-  Exported Variable 9 = -dofs 1 "FS lower"
-  Exported Variable 10 = -dofs 1 "Temperature"
+  Exported Variable 1 = -dofs 1 "alpha"
+  !Exported Variable 1 DOFS = Integer 1
+  Exported Variable 2 = -dofs 1 "FS upper"
+  Exported Variable 3 = -dofs 1 "FS lower"
+  Exported Variable 4 = -dofs 1 "Temperature"
+  !Exported Variable 5 = -dofs 1 "dvu_ext"
+  !Exported Variable 5 DOFS = Integer 1
+  !Exported Variable 6 = -dofs 1 "Glen Enhancement Factor"
+  !Exported Variable 6 DOFS = Integer 1
 End
 
-
-!!! Compute Cost function
-!!!!!!!!   Has to be run before the Adjoint Solver as adjoint forcing is computed here !!!!!
-Solver 9
-  Equation = "Cost"
-  Variable = -nooutput "CostV"
-  Variable DOFs = 1
-  procedure = "ElmerIceSolvers" "Adjoint_CostDiscSolver"
-
-  Optimize Bandwidth = logical false
-
-  Problem Dimension = Integer 2 ! I think this is not used after all...
-  Cost Variable Name = String "CostValue"  ! Name of Cost Variable
-! save the cost as a function of iterations (iterations,Cost,rms=sqrt(2*Cost/Ndata)
-  Cost Filename = File "Cost_U_$name$.dat"
-  Lambda = Real 1.0
-
-  Observed Variable Dimension = Integer 2
-  Observed Variable Name = String "Flow Solution"
- ! netcdf with vx, vy
-   Observation File Name = File "#VELOCITY_DATA#"
-   X Var Name = String x_coords
-   y Var Name = String y_coords
- ! 
-   Save used data = logical False
-end
-
-!!!!  Adjoint Solution
-Solver 10
-  Equation = "Adjoint"
-  procedure = "ElmerIceSolvers" "Adjoint_LinearSolver"
-
-  Variable = -nooutput Adjoint
-  Variable Dofs = 4
-
-!Name of the flow solution solver
-!  Direct Solver Equation Name = string "Stokes-vec"
-  Direct Solver Equation Name = string "Navier-Stokes"
-
-  Linear System Solver = Direct
-  Linear System Direct Method = mumps
-  mumps percentage increase working space = integer 50
-End
-
-!!!!!!!!!!!!!!!!!!!!!!!!
-!!  Derivative / beta
-!!  body 2 (lower surface)
-!!!!!!!!!!!!!!!!!!!!!!!!
-Solver 11
-  Equation = "DJDBeta"
-  procedure = "ElmerIceSolvers" "AdjointStokes_GradientBetaSolver"
-
-  Flow Solution Name = String "Flow Solution"
-  Adjoint Solution Name = String "Adjoint"
-  Gradient Variable Name = String "DJDbeta"
-
-!! Exported Variables
-  Exported Variable 1 = DJDbeta
-End
-
-Solver 12
-  Equation = "DJDBeta_Reg"
-
-  Variable = -nooutput "DJDBReg"
-  Variable DOFs = 1
-
-  procedure = "ElmerIceSolvers" "Adjoint_CostRegSolver"
-  Optimize Bandwidth = logical false
-
-  Problem Dimension = Integer 2
-  Cost Filename = File "CostReg_$name$.dat"
-  Optimized Variable Name = String "alpha"
-  Gradient Variable Name = String "DJDBeta"
-  Cost Variable Name = String "CostValue"
-  Lambda = Real $LambdaReg
-  Reset Cost Value = Logical False
-  A priori Regularisation = Logical False
-end
-
-!!!!! Optimization procedure 
-Solver 13
-  Exec Solver = after Timestep
-
-  Equation = "Optimize_m1qn3"
-  procedure = "ElmerIceSolvers" "Optimize_m1qn3Parallel"
-
-  Cost Variable Name = String "CostValue"
-  Optimized Variable Name = String "alpha"
-  Gradient Variable Name = String "DJDBeta"
-  gradient Norm File = String "GradientNormAdjoint_$name$.dat"
-
-  !Note: it may be beneficial to set this to True, which scales
-  !the gradient by 1/boundary_weights. With this set to false,
-  !larger elements produce larger gradients.
-  Mesh Independent = Logical False
-
-! M1QN3 Parameters
-  M1QN3 dxmin = Real 1.0e-10
-  M1QN3 epsg = Real  1.e-6
-  M1QN3 niter = Integer #IMAX
-  M1QN3 nsim = Integer #IMAX
-  M1QN3 impres = Integer 5
-  M1QN3 DIS Mode = Logical False
-  M1QN3 df1 = Real 0.5
-  M1QN3 normtype = String "dfn"
-  M1QN3 OutputFile = File  "M1QN3_$name$.out"
-  M1QN3 ndz = Integer 20
-end
-
-Solver 14
-  Equation = "Emergence velocity"
-  Procedure = "ElmerIceSolvers" "GetEmergenceVelocity"
-  Variable = -dofs 1 EmergenceVelocity
-End
-
-Solver 15
+Solver 6
 !  Exec Solver = String "never"
   Exec Solver = String "after saving"
   Equation = String "ResultOutput"
@@ -408,43 +233,33 @@ Solver 15
   Output Directory = File #outdir
   Vtu Format = Logical True
   Save Geometry Ids = Logical True
-  Scalar Field 1  = EmergenceVelocity
-  Scalar Field 2  = alpha
-  Scalar Field 3  = proj_beta
-  Scalar Field 4  = bed
-  Scalar Field 5  = height
-  Scalar Field 6  = depth
-  Scalar Field 7  = FS upper
-  Scalar Field 8  = FS lower
-  Scalar Field 11 = groundedmask
-  Scalar Field 12 = glen enhancement factor
-  Scalar Field 13 = proj_dvu 1
-  Scalar Field 14 = proj_dvu 2
-  Scalar Field 15 = DJDBeta
-!  Scalar Field 13 = smbref
-!  Scalar Field 6  = Temperature Homologous
+  Scalar Field 1  = alpha
+  Scalar Field 2  = proj_beta
+  Scalar Field 3  = proj_bed
+  Scalar Field 4  = height
+  Scalar Field 5  = depth
+  Scalar Field 6  = FS upper
+  Scalar Field 7  = FS lower
+  Scalar Field 8 = groundedmask
+  !Scalar Field 9 = proj_dvu 1
+  !Scalar Field 10 = proj_dvu 2
+  !Scalar Field 11 = glen enhancement factor
   Vector Field 1  = velocity 
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Equation 1
-  Active Solvers (8) = 1 2 3 4 6 8 10 15
+  Active Solvers (5) = 1 2 3 5 6
   Flow Solution Name = String "Flow Solution"
   Convection = Computed 
   NS Convect= False
 End
 
 Equation 2
-  Active Solvers (5)=  5 7 11 12 13
+  Active Solvers (1) =  4
   Convection = Computed 
   Flow Solution Name = String "Flow Solution"
-  Friction Load Mask = String "GroundedMask" !need this?
-End
-
-Equation 3
-  Active Solvers (2)=  9 14
-  Convection = Computed 
-  Flow Solution Name = String "Flow Solution"
+  Friction Load Mask = String "GroundedMask" 
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -480,22 +295,12 @@ Boundary Condition 3
 
   Normal-Tangential Velocity = Logical True  
 
-!  Velocity 1 = Variable bmb, GroundedMask
-!    Real lua "bmb_as_vel(tx[0],tx[1])"
-
   Velocity 1 = Real 0.0e0
   Velocity 1 Condition = Variable GroundedMask
     Real MATC "tx + 0.5"
 
   FS lower = Variable proj_thickness, proj_bed
      Real lua "floatLower(tx[0],tx[1])"
-
-!!Brought over from Simple2SR
-!  Slip Coefficient 2 = Variable GroundedMask
-!     Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" !math.exp(10^tx[1])
-!  Slip Coefficient 3 = Variable GroundedMask
-!     Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)"
-!  !Slip Coefficient derivative = Real 0.0
 
   Slip Coefficient 2 = Variable alpha, GroundedMask
     REAL procedure "ElmerIceUSF" "TenPowerA_masked"
@@ -509,12 +314,12 @@ Boundary Condition 3
   External Pressure = Variable Coordinate 3
      Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])"  !CHANGE BACK TO SW_PRESSURE?
 
-!  External Pressure = variable coordinate 3
-!    Real Procedure "ElmerIceUSF" "SeaPressure"
-!  Compute Sea Pressure = Logical True
+!!  External Pressure = variable coordinate 3
+!!    Real Procedure "ElmerIceUSF" "SeaPressure"
+!!  Compute Sea Pressure = Logical True
 
-!  External Pressure = Variable Coordinate 3
-!    Real lua "sw_pressure(tx[0])"
+!!  External Pressure = Variable Coordinate 3
+!!    Real lua "sw_pressure(tx[0])"
 
   Slip Coefficient 1 = Variable Coordinate 3
     Real Procedure "ElmerIceUSF" "SeaSpring"
@@ -529,5 +334,4 @@ Boundary Condition 4
   Depth = Real 0.0
   FS upper = Variable proj_thickness,proj_bed
      Real lua "floatUpper(tx[0],tx[1])"
-  !Normal-Tangential Velocity = Logical True ! Commented out in SimpleSR
 End 

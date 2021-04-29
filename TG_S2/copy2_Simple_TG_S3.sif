@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_reltemp"
+$name="TG_S3_copy2_run2"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -60,9 +60,9 @@ End
 Initial Condition 1
   Temperature = Variable temp_c
     Real lua "K2C(tx[0])"
- FS lower = Variable thickness, bed
+ FS lower = Variable proj_thickness, proj_bed
     Real lua "floatLower(tx[0],tx[1])"
- FS upper = Variable thickness, bed
+ FS upper = Variable proj_thickness, proj_bed
   Real lua "floatUpper(tx[0],tx[1])"
 !alpha = Variable GroundedMask
 !    Real MATC "(tx(0) > 0)*1.0e-03"
@@ -139,7 +139,7 @@ Solver 3
   Variable = GroundedMask
   Variable DOFs = 1
   Toler = Real #GLTolerance
-  Bedrock Variable = String "bed"
+  Bedrock Variable = String "proj_bed"
 End
 
 !!!! Navier-Stokes Solution
@@ -294,7 +294,7 @@ Boundary Condition 3
 !!    Real Procedure "ElmerIceUSF" "FreeSlipShelves"
 !!  Slip Coefficient 3  = Variable alpha
 !!   Real Procedure "ElmerIceUSF" "FreeSlipShelves"
- FS lower = Variable thickness, bed
+ FS lower = Variable proj_thickness, proj_bed
     Real lua "floatLower(tx[0],tx[1])"
 End
 
@@ -302,7 +302,7 @@ End
 Boundary Condition 4
   Name= "Surface" mandatory to compute cost function
   Body Id = 1
-  FS upper = Variable thickness, bed
+  FS upper = Variable proj_thickness, proj_bed
      Real lua "floatUpper(tx[0],tx[1])"
   !Normal-Tangential Velocity = Logical True !IS THIS AND BELOW NEEDED FOR INVERSION?I DON'T THINK SO.
   !Slip Coefficient 1 = Variable vx, vy, velocity 1, as_perp_apl

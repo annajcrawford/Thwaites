@@ -286,13 +286,13 @@ end
 
 -- ## inputs: TinC is temperature in Centigrade, p is pressure. 
 -- ## Returns temperature relative to pressure melting point.
--- ## CHECK - SHOULD TREL LINE BE ADDITION?
+-- ## ANNA CHANGED TO ADDITION FOR CALC OF tREL!
 function relativetemp(TinC,p)
   pe = p
   if (pe < 0.0) then
     pe = 0.0
   end
-  Trel = TinC - 9.8e-08*1.0e06*pe
+  Trel = TinC + 9.8e-08*1.0e06*pe
   if (Trel > 0.0) then
     Trel = 0.0
   end
