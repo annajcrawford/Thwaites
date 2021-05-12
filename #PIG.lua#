@@ -1,4 +1,4 @@
-
+kn
 datadir = "/projappl/project_2002875/data/antarctic/"
 outdir = "./vtuoutputs"
 meshdb = "../mesh2D_TG_refpart/"

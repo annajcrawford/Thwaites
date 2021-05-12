@@ -1,0 +1,2 @@
+Simple2SR.sif results in a relatively realistic ice tongue velocity, with speeds   that increase over the time of the run. 
+This sif assigns an enhancement factor based on the velocity gradient. 

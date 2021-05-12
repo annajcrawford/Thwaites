@@ -19,9 +19,9 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Simulation
   Coordinate System  = Cartesian 3D 
-  Simulation Type = Transient
+  Simulation Type = Steady
  
-  Timestep Intervals = 1
+  Timestep Intervals = 10
   TimeStep Size = 0.00014 !1 hr CAN ADD TIME EVOLUTION
   Output Intervals = 1
 

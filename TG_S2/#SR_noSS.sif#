@@ -4,11 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_dV_GEF_Steady"
-
-! The total cost function to minimize is J=J_u + LambdaReg * Jreg
-! where J_u=velocity error; Jreg=regularisation (smoothness)
-$LambdaReg=1.0e5
+$name="TG_SR_noSS_run8"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -25,20 +21,22 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Simulation
   Coordinate System  = Cartesian 3D 
-  Simulation Type = Steady
-  Timestepping Method = "bdf" !added April 12
-  BDF Order = 1 !Added April 12
+  Simulation Type = Transient
+  Timestepping Method = "bdf"
+  BDF Order = 1
 
-  Timestep Intervals = 2
-  TimeStep Size = 0.00014 !1 hr CAN ADD TIME EVOLUTION
+  Timestep Intervals = 40
+  Timestep Size = Variable "Timestep"
+     Real lua "timeStepCalc(tx[0])"
+  !TimeStep Size = 0.00014 !1 hr CAN ADD TIME EVOLUTION
   Output Intervals = 1
 
   Extruded Mesh Levels = #MLEV
   Extruded Mesh Density = Variable Coordinate 1
     Real MATC "1.0 + 2.5 * tx"
 
-  Steady State Min Iterations = #IMIN
-  Steady State Max Iterations = #IMAX
+  Steady State Min Iterations = 1
+  Steady State Max Iterations = 1
 
   Output File = "$name$.result" 
   !Post File = "$name$_.vtu"
@@ -81,7 +79,7 @@ Initial Condition 1
     Real lua "floatUpper(tx[0],tx[1])"
 
   dvu_ext = Variable proj_dvu 1, proj_dvu 2
-    Real lua "math.sqrt(tx[0]*tx[0] + tx[1]*tx[1] )"   
+    Real lua "math.sqrt(tx[0]*tx[0] + tx[1]*tx[1] )"  
 End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -98,13 +96,13 @@ Material 1
   Cauchy = Logical TRUE !change to false for deviatoric
 
   Viscosity Model = String "glen"
-  Viscosity = 1.0 ! Dummy but avoid warning output
+  Viscosity = Real 1.0 ! Dummy but avoid warning output
 
   Glen Exponent = Real 3.0
   !Glen Enhancement Factor = Real 1.0
   Glen Enhancement Factor = Variable dvu_ext
     Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
- 
+   
   Limit Temperature = Real #Tlim
   Relative Temperature = Variable Temperature, Pressure 
     Real lua "relativetemp(tx[0], tx[1])"
@@ -113,7 +111,6 @@ Material 1
   Rate Factor 2 = Real #A2 
   Activation Energy 1 = Real #Q1
   Activation Energy 2 = Real #Q2
-  
   Critical Shear Rate = Real 1.0e-10
   sea level = Real 0.0
 End
@@ -150,20 +147,20 @@ Solver 1
   Exported Variable 9 = -dofs 1 "thickness
 End
 
-Solver 2 !!I think this can be removed, was originally included in Rupert's SR to deal with melt rates
-  Exec Solver = Before all
+Solver 2
+  !Exec Solver = "never"
+  Exec Solver = "Before Simulation"
   Equation = "MapCoordinate_init"
   Procedure = "StructuredMeshMapper" "StructuredMeshMapper"
+
   Active Coordinate = Integer 3
-
-  Top Surface Variable Name = String "FS upper"
-  Bottom Surface Variable Name = String "FS lower"
-
   Dot Product Tolerance = Real #DPtol
-  !Displacement Mode = Logical False !NEEDED?
-  Correct Surface = Logical True
   Minimum Height = Real #MINH
+  Top Surface Variable Name = String FS upper
+  Bottom Surface Variable Name = String FS lower
+  Correct Surface = Logical True
 End
+
 
 Solver 3
   !Exec Solver = "never"
@@ -178,6 +175,7 @@ Solver 3
   Bottom Surface Variable Name = String FS lower
   Correct Surface = Logical True
 End
+
 
 Solver 4
   Equation = "HeightDepth"
@@ -229,17 +227,17 @@ Solver 8
 
   Linear System Solver = Direct
   Linear System Direct Method =  mumps
-  Mumps percentage increase working space = Integer 60
+  Mumps percentage increase working space = Integer 100
 
-  Nonlinear System Max Iterations = Integer 40 !WAS 5 
-  Nonlinear System Convergence Tolerance  = Real 1.0e-1
-  Nonlinear System Newton After Iterations = 500 !WAS 50
-  Nonlinear System Newton After Tolerance = 1.0e-5 ! is e-10 in  LAGS_relax_S2.sif
-  Nonlinear System Reset Newton = Logical True !NEEDED?
-  Nonlinear System Relaxation Factor = 0.5 !NEEDED?
-  Nonlinear System Abort Not Converged = Logical True !WAS SET TO FALSE FOR TESTING, I BELIEVE
+  Nonlinear System Max Iterations = Integer 40
+  Nonlinear System Convergence Tolerance  = Real 1.0e-2
+  Nonlinear System Newton After Iterations = 500
+  Nonlinear System Newton After Tolerance = 1.0e-10 
+  !Nonlinear System Reset Newton = Logical True
+  Nonlinear System Relaxation Factor = 0.4
+  !Nonlinear System Abort Not Converged = Logical True !WAS SET TO FALSE FOR TESTING, I BELIEVE
 
-  Steady State Convergence Tolerance = Real 1.0e-10
+  Steady State Convergence Tolerance = Real 1.0e-3
 
   ! Timings of the solver
   Linear System Timing = Logical True
@@ -251,15 +249,15 @@ Solver 8
   !---------------------------------------------
   Steady State Convergence Tolerance = Real 1.0e-8  
 
-  !Exported Variable 1 = -dofs 1 "FS Upper"
-  !Exported Variable 2 = -dofs 1 "FS Lower"
+  !Exported Variable 1 = -dofs 1 "FS upper"
+  !Exported Variable 2 = -dofs 1 "FS lower"
   Exported Variable 1 = -dofs 1 "Temperature"
   Exported Variable 2 = -dofs 1 "dvu_ext"
   Exported Variable 3 = -dofs 1 "glen enhancement factor"
 End
 
 Solver 9
-  !Exec solver = "Never" !runs as never commented in by LAGS_relax_S2.sif
+  Exec solver = "Never" !runs as never commented in by LAGS_relax_S2.sif
   Equation = String "StressSolver"
   Procedure =  File "ElmerIceSolvers" "ComputeDevStress"
   Variable = -nooutput "Sij"
@@ -299,8 +297,8 @@ Solver 10
   Linear System Convergence Tolerance = 1.0e-08
   Nonlinear System Max Iterations = 100
   Nonlinear System Min Iterations = 2
-  Nonlinear System Convergence Tolerance = 1.0e-06 !Is e-06 in LAGS_relax_S2.sif, 1.0e-04 originally
-!Steady State Convergence Tolerance = 1.0e-04 !CHECK IF THIS IS NEEDED!
+  Nonlinear System Convergence Tolerance = 1.0e-06 
+  Steady State Convergence Tolerance = 1.0e-04 !CHECK IF THIS IS NEEDED!
 !  Stabilization Method = Bubbles
   Stabilization Method = Stabilized
   Flow Solution Name = String "Flow Solution"
@@ -341,12 +339,6 @@ Solver 11
 End
 
 Solver 12
-   Exec Solver = after timestep
-   Procedure = File "SaveData" "SaveMaterials"
-   Parameter 1 = String glen enhancement factor
-End
-
-Solver 13
   Equation = String "ResultOutput"
   Procedure = File "ResultOutputSolve" "ResultOutputSolver"
   Save Geometry Ids = Logical True
@@ -367,28 +359,29 @@ Solver 13
   Scalar Field 10 = proj_vy
   Scalar Field 11 = surface
   Scalar Field 12 = proj_thickness
-  Scalar Field 13 = glen enhancement factor   
-  Scalar Field 14 = temperature
-  Scalar Field 15 = pressure
-  Scalar Field 16 = thickness
-  Vector Field 1 = proj_dvu !if need, may need to write out as proj_dvu 1 and proj_dvu 2
-  Vector Field 2 = velocity 
+  Scalar Field 13 = temperature
+  Scalar Field 14 = pressure
+  Scalar Field 15 = thickness
+  Scalar Field 16 = glen enhancement factor
+  Scalar Field 17 = proj_bed
+  Vector Field 1 = velocity
+  Vector Field 2 = dvu_ext 
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Equation 1
-  Active Solvers (9) = 1 2 3 4 6 8 9 12 13
+  Active Solvers (8) = 1 2 3 4 6 8 9 12 ! 5 7 8 11
 End
 
 Equation 2
-  Active Solvers (3) = 5 7 10 
+  Active Solvers (3) = 5 7 10 !4 6 9  
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
 
 Equation 3
-  Active Solvers (1) = 11 
+  Active Solvers (1) = 11 !10 
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
@@ -400,8 +393,6 @@ Boundary Condition 1
 
   Normal-Tangential Velocity = Logical True
   Slip Coefficient 1 = Real 10.0
-  !External Pressure = Variable depth !WHY DO WE NEED THIS
-   ! Real LUA "rhoi*gravity*tx[0]"   
   Slip Coefficient 2 = Real 0.001
   Slip Coefficient 3 = Real 0.001
 End
@@ -409,74 +400,54 @@ End
 Boundary Condition 2
   Name = "calving_front"
   Target Boundaries(1) = 2
-  
-  Flow Force BC = logical True !Using this instead of Thomas's trick below because of lua errors, but most likely ok 
-  External Pressure = variable coordinate 3
-    Real Procedure "ElmerIceUSF" "SeaPressure"
 
-  Normal-Tangential Velocity = True
-  
-  Compute Sea Pressure = Logical True
-  !External Pressure = Variable Coordinate 3 !Thomas's trick
-   ! Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])" 
+  External Pressure = Variable Coordinate 3
+    Real lua "sw_pressure(tx[0])"
 End
 
 Boundary Condition 3
-  Name= "bed"! mandatory to compute regularistaion term of the cost function (int (dbeta/dx) 2)
+  Name= "lower_surface"
   Body Id = 2
 
   Test Contact Tolerance = real 1.0e-10
   Height = Real 0.0
-  Mass Consistent Normals = logical True !WHAT'S THIS?
-
+  
   Normal-Tangential Velocity = Logical True  
 
   Velocity 1 = Real 0.0e0
   Velocity 1 Condition = Variable GroundedMask
     Real LUA "tx[0] + 0.5"
   
-  FS lower = Variable proj_thickness, proj_bed
-     Real lua "floatLower(tx[0],tx[1])"
+  FS Lower = Equals proj_bed
+  FS Lower condition = Variable GroundedMask
+     Real MATC "tx + 0.5" 
 
-  Slip Coefficient 2 = Variable GroundedMask
-     Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" 
-  Slip Coefficient 3 = Variable GroundedMask
-     Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" 
-  !Slip Coefficient derivative = Real 0.0
-  
   Flow Force BC = Logical True
 
+  Slip Coefficient 2 = Variable proj_beta, GroundedMask
+    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
+  Slip Coefficient 3 = Variable proj_beta, GroundedMask
+    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
+   
+ ! Slip Coefficient 2 = Variable GroundedMask
+ !    Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" 
+ ! Slip Coefficient 3 = Variable GroundedMask
+ !    Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" 
+  !!Slip Coefficient derivative = Real 0.0
+  
   External Pressure = Variable Coordinate 3
-     Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])"  !CHANGE BACK TO SW_PRESSURE?
+    Real lua "sw_pressure(tx[0])"
+     !Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])"  !HAD BEEN USING TO APRIL 30
 
   Slip Coefficient 1 = Variable Coordinate 3
      Real Procedure "ElmerIceUSF" "SeaSpring"
   Compute Sea Spring = Logical True
-
-!!!BRING BACK IN WHEN READY FOR INVERSION.
-!!!Removes application of alpha in regions of ungrounded ice
-!  Slip Coefficient 2 = Variable alpha 
- !   REAL procedure "ElmerIceUSF" "TenPowerA"
- ! Slip Coefficient 3 = Variable alpha
- !   REAL procedure "ElmerIceUSF" "TenPowerA"
- ! Slip Coefficient derivative = Variable alpha
- !   REAL procedure "ElmerIceUSF" "TenPowerA_d"
-  
-!  Slip Coefficient 2 = Variable alpha, GroundedMask 
-!    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
-!  Slip Coefficient 3 = Variable alpha, GroundedMask
-!    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
-!  Slip Coefficient derivative = Variable alpha, GroundedMask
-!    REAL procedure "ElmerIceUSF" "TenPowerA_d_Masked" !has been USF_CoV
-
 End
 
 ! Upper Surface
 Boundary Condition 4
-  Name= "Surface" mandatory to compute cost function
+  Name= "Surface" 
   Body Id = 3
   Depth = Real 0.0
-  FS upper = Variable proj_thickness,proj_bed
-     Real lua "floatUpper(tx[0],tx[1])"
   !Normal-Tangential Velocity = Logical True !IS THIS AND BELOW NEEDED FOR INVERSION?I DON'T THINK SO
 End 

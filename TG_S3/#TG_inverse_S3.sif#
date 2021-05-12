@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_S3_0511_Run4"
+$name="TG_S3_0511_Run3"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -18,7 +18,7 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Constants
   water density = Real #rhoo
-  !Sea Spring Timestep Size = Real #timestepsize
+  Sea Spring Timestep Size = Real 0.0027
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -38,7 +38,7 @@ Simulation
 
   Restart File = "../TG_S2/results/TG_SR_GEF_SSTS_WD.result"
   !Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
-  !Restart Position = 63
+  !Restart Position = 65
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
@@ -74,6 +74,9 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Initial Condition 1
  
+  !Temperature = Variable temp_c
+  !  Real lua "K2C(tx[0])"  
+
   alpha = Equals proj_beta !Real -3.0
 
   !dvu_ext = Variable proj_dvu 1, proj_dvu 2
@@ -105,7 +108,7 @@ Material 1
   Glen Exponent = Real #n
 
   !Glen Enhancement Factor = Variable dvu_ext
-   ! Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
+  !  Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
   !Glen Enhancement Factor = Real "Glen Enhancement Factor"
 
   !Temperature Field Variable = String "Temperature"
@@ -152,6 +155,7 @@ Solver 2
   Correct Surface = Logical True
   Minimum Height = Real #MINH
 End
+
 
 !!!! Navier-Stokes Solution
 Solver 3
@@ -202,7 +206,6 @@ Solver 3
   !Exported Variable 7 = Glen Enhancement Factor
   !Exported Variable 7 DOFS = Integer 1
 End
-
 
 !!! Compute Cost function
 !!!!!!!!   Has to be run before the Adjoint Solver as adjoint forcing is computed here !!!!!
@@ -338,10 +341,6 @@ Solver 10
   Scalar Field 7  = FS upper
   Scalar Field 8  = FS lower
   Scalar Field 11 = groundedmask
-  Scalar Field 12 = glen enhancement factor
-  Scalar Field 13 = proj_dvu 1
-  Scalar Field 14 = proj_dvu 2
-  Scalar Field 15 = DJDBeta
   Scalar Field 16 = vx
   Scalar Field 17 = vy
 !  Scalar Field 13 = smbref
@@ -358,10 +357,10 @@ Equation 1
 End
 
 Equation 2
-  Active Solvers (3)=  6 7 8
+  Active Solvers (3)=   6 7 8
   Convection = Computed 
   Flow Solution Name = String "Flow Solution"
-  Friction Load Mask = String "GroundedMask" 
+  Friction Load Mask = String "GroundedMask" !need this?
 End
 
 Equation 3
@@ -389,6 +388,7 @@ Boundary Condition 2
  External Pressure = variable coordinate 3
    Real Procedure "ElmerIceUSF" "SeaPressure"
  
+ !Normal-Tangential Velocity = True
  Compute Sea Pressure = Logical True
 End
 
@@ -396,6 +396,8 @@ Boundary Condition 3
   Name= "bed" !mandatory to compute regularistaion term of the cost function (int (dbeta/dx) 2)
   Body ID = 2
   
+  !Test Contact Tolerance = real 1.0e-10
+  !Height = Real 0.0
   Mass Consistent Normals = logical True
 
   Normal-Tangential Velocity = Logical True  
@@ -407,23 +409,35 @@ Boundary Condition 3
   Velocity 1 Condition = Variable GroundedMask
     Real MATC "tx + 0.5"
 
-  Slip Coefficient 2 = Variable alpha, GroundedMask
-    REAL procedure "USF_CoV" "TenPowerA_masked"
-  Slip Coefficient 3 = Variable alpha, GroundedMask
-    REAL procedure "USF_CoV" "TenPowerA_masked"
-  Slip Coefficient derivative = Variable alpha, GroundedMask
-    REAL procedure "USF_CoV" "TenPowerA_d_Masked"
+ ! FS lower = Variable proj_thickness, proj_bed
+ !    Real lua "floatLower(tx[0],tx[1])"
 
-  External Pressure = Variable Coordinate 3
-    Real lua "sw_pressure(tx[0])" 
+!!Brought over from Simple2SR
+!  Slip Coefficient 2 = Variable GroundedMask
+!     Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" !math.exp(10^tx[1])
+!  Slip Coefficient 3 = Variable GroundedMask
+!     Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)"
+!  !Slip Coefficient derivative = Real 0.0
+
+  Slip Coefficient 2 = Variable alpha, GroundedMask
+    REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+  Slip Coefficient 3 = Variable alpha, GroundedMask
+    REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+  Slip Coefficient derivative = Variable alpha, GroundedMask
+    REAL procedure "ElmerIceUSF" "TenPowerA_d_Masked"
+
+  !Flow Force BC = logical True
+
+ ! External Pressure = Variable Coordinate 3
+ !   Real lua "sw_pressure(tx[0])" 
    !Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])"  !CHANGE BACK TO SW_PRESSURE?
 
-  !External Pressure = variable coordinate 3
-   ! Real Procedure "ElmerIceUSF" "SeaPressure"
+  External Pressure = variable coordinate 3
+    Real Procedure "ElmerIceUSF" "SeaPressure"
   !Compute Sea Pressure = Logical True
 
   !Slip Coefficient 1 = Variable Coordinate 3
-   ! Real Procedure "ElmerIceUSF" "SeaSpring"
+  !  Real Procedure "ElmerIceUSF" "SeaSpring"
   !Compute Sea Spring = Logical True
 
 End
@@ -432,5 +446,6 @@ End
 Boundary Condition 4
   Name= "Surface" !mandatory to compute cost function
   Body Id = 3
+  !Depth = Real 0.0
   Normal-Tangential Velocity = Logical True ! Commented out in SimpleSR
 End 

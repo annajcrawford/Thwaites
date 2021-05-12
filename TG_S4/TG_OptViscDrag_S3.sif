@@ -5,7 +5,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_S4_OptVisc_alpha_GEF"
+$name="TG_S4_OptViscAlpha_GEF_SR63"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -39,18 +39,18 @@ Simulation
   OutPut File = "$name$_.result"
   Output Intervals = 1
 
-  Restart File = "../TG_S2/results/TG_dV_GEF.result"
-  !Restart Position = 0 
+  Restart File = "../TG_S2/results/TG_SR_noSS_run8.result"
+  Restart Position = 63 
 
   Restart Variable 1  = String groundedmask
   Restart Variable 2  = String temperature
   Restart Variable 3  = String pressure
-!  Restart Variable 4  = String velocity
-  Restart Variable 4 = String FS upper
-  Restart Variable 5 = String FS lower
-  Restart Variable 6 = String proj_thickness
-  Restart Variable 7 = String glen enhancement factor
-  !Restart Variable 7 = String alpha
+  Restart Variable 4  = String velocity
+  Restart Variable 5 = String FS upper
+  Restart Variable 6 = String FS lower
+  Restart Variable 7 = String proj_thickness
+  Restart Variable 8 = String glen enhancement factor
+  !Restart Variable 9 = String alpha
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
