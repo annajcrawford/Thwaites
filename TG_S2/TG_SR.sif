@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_SR_GEF_SSTS_WD"
+$name="TG_SR_0513_Run1"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -21,16 +21,14 @@ Constants
   ! parameters for the ismip6 basal melt
   ! (seems to be mostly in SI units)
   gamma 0 = Real -11075.0 ! unit: m/yr
-  Ice Density = Real 910.0
-  SW Density = Real 1025.0
+  Ice Density = Real #rhoi
+  SW Density = Real #rhoo
   Latent Heat = Real #Lf  !3.34e05
   SW Cp = Real 3974.0
 
   rhoo = Real #rhoo
   rhoi = Real #rhoi
   gravity = Real #gravity
-
-  Sea Spring Timestep Size = Real 0.0027
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -40,10 +38,10 @@ Simulation
   Timestepping Method = "bdf"
   BDF Order = 1
 
-  Timestep Intervals = 65
-  !Timestep Size = Variable "Timestep"
-    !Real lua "timeStepCalc(tx[0])"
-  TimeStep Size = 0.0027 !1 d
+  Timestep Intervals = 76 !8 months based on timstepcalc() w/ cap
+  Timestep Size = Variable "Timestep"
+    Real lua "timeStepCalc(tx[0])"
+  !TimeStep Size = 0.0027 !1 d
   Output Intervals = 1
 
   Extruded Mesh Levels = #MLEV
@@ -93,8 +91,8 @@ Initial Condition 1
   FS upper = Variable proj_thickness, proj_bed
     Real lua "floatUpper(tx[0],tx[1])"
 
-  dvu_ext = Variable proj_dvu 1, proj_dvu 2
-    Real lua "math.sqrt(tx[0]*tx[0] + tx[1]*tx[1] )"  
+  !dvu_ext = Variable proj_dvu 1, proj_dvu 2
+    !Real lua "math.sqrt(tx[0]*tx[0] + tx[1]*tx[1] )"  
 End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -114,9 +112,9 @@ Material 1
   Viscosity = Real 1.0 ! Dummy but avoid warning output
 
   Glen Exponent = Real 3.0
-  !Glen Enhancement Factor = Real 1.0
-  Glen Enhancement Factor = Variable dvu_ext
-    Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
+  Glen Enhancement Factor = Real 1.0
+  !Glen Enhancement Factor = Variable dvu_ext
+  !  Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
    
   Limit Temperature = Real #Tlim
   Relative Temperature = Variable Temperature, Pressure 
@@ -144,25 +142,7 @@ End
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 Solver 1
-  Equation = "DummyRoutine"
-  Procedure = File "DummySolver" "DummySolver"
-  Exec Solver = "never" !"Before all"
-  Variable = -nooutput dummyV
-  Variable Output = False
-  Exported Variable 1 = -dofs 1 "proj_bed
-  Exported Variable 2 = -dofs 1 "proj_beta"
-  Exported Variable 3 = -dofs 2 "proj_dvu"
-  Exported Variable 4 = -dofs 1 "proj_thickness"
-  Exported Variable 5 = -dofs 1 "proj_vobs"
-  Exported Variable 6 = -dofs 1 "proj_vx"
-  Exported Variable 7 = -dofs 1 "proj_vy"
-  Exported Variable 8 = -dofs 1 "temp_c"
-  Exported Variable 9 = -dofs 1 "thickness
-End
-
-Solver 2
   !Exec Solver = "never"
   Exec Solver = "Before Simulation"
   Equation = "MapCoordinate_init"
@@ -176,8 +156,7 @@ Solver 2
   Correct Surface = Logical True
 End
 
-
-Solver 3
+Solver 2
   !Exec Solver = "never"
   Exec Solver = "Before Timestep"
   Equation = "MapCoordinate"
@@ -191,8 +170,7 @@ Solver 3
   Correct Surface = Logical True
 End
 
-
-Solver 4
+Solver 3
   Equation = "HeightDepth"
   Exec Solver = "Before Timestep"
   Procedure = "StructuredProjectToPlane" "StructuredProjectToPlane"
@@ -201,7 +179,7 @@ Solver 4
   Operator 2 = height
 End
 
-Solver 5
+Solver 4
   Exec Solver = Before all 
   Equation = "GroundedMask"
   Procedure = "ElmerIceSolvers" "GroundedSolver"
@@ -211,7 +189,7 @@ Solver 5
   Bedrock Variable = String "proj_bed" !NOT IN TG_relax_S2.sif but probably needed
 End
 
-Solver 6
+Solver 5
 !  Exec solver = never
   Equation = "Normal Vector"
   Procedure = "ElmerIceSolvers" "ComputeNormalSolver"
@@ -221,7 +199,7 @@ Solver 6
   Optimize Bandwidth = Logical False
 End
 
-Solver 7
+Solver 6
 !  Exec solver = never
   Equation = Fw
   Procedure = "ElmerIceSolvers" "GetHydrostaticLoads"
@@ -230,7 +208,7 @@ Solver 7
 End
 
 !!!! Navier-Stokes Solution
-Solver 8
+Solver 7
   Equation = "Navier-Stokes"  
   Stabilization Method = String Stabilized
   Flow Model = Stokes
@@ -242,15 +220,15 @@ Solver 8
 
   Linear System Solver = Direct
   Linear System Direct Method =  mumps
-  Mumps percentage increase working space = Integer 100
+  Mumps percentage increase working space = Integer 60
 
-  Nonlinear System Max Iterations = Integer 40
-  Nonlinear System Convergence Tolerance  = Real 1.0e-4 !UP THIS WHEN FINAL 
-  Nonlinear System Newton After Iterations = 500
-  Nonlinear System Newton After Tolerance = 1.0e-10 
-  !Nonlinear System Reset Newton = Logical True
-  Nonlinear System Relaxation Factor = 0.4
-  !Nonlinear System Abort Not Converged = Logical True !WAS SET TO FALSE FOR TESTING, I BELIEVE
+  Nonlinear System Max Iterations = Integer 50
+  Nonlinear System Convergence Tolerance  = Real 1.0e-7 
+  Nonlinear System Newton After Iterations = 50
+  Nonlinear System Newton After Tolerance = 1.0e-5 
+  Nonlinear System Reset Newton = Logical True
+  !Nonlinear System Relaxation Factor = 0.4
+  Nonlinear System Abort Not Converged = Logical True 
 
   Steady State Convergence Tolerance = Real 1.0e-10
 
@@ -265,11 +243,11 @@ Solver 8
   Steady State Convergence Tolerance = Real 1.0e-8  
 
   Exported Variable 1 = -dofs 1 "Temperature"
-  Exported Variable 2 = -dofs 1 "dvu_ext"
-  Exported Variable 3 = -dofs 1 "glen enhancement factor"
+  !Exported Variable 2 = -dofs 1 "dvu_ext"
+  !Exported Variable 3 = -dofs 1 "glen enhancement factor"
 End
 
-Solver 9
+Solver 8
   Exec solver = "Never" !runs as never commented in by LAGS_relax_S2.sif
   Equation = String "StressSolver"
   Procedure =  File "ElmerIceSolvers" "ComputeDevStress"
@@ -295,7 +273,7 @@ Solver 9
   Linear System Residual Output = 1
 End
 
-Solver 10
+Solver 9
 ! Exec Solver = Never
   Exec Solver = "After TimeStep"
   Equation =  String "Lower Free Surface"
@@ -323,7 +301,7 @@ Solver 10
   Exported Variable 2 DOFS = 1
 End
 
-Solver 11
+Solver 10
 !  Exec Solver = Never
   Exec Solver = "After TimeStep"
   Equation =  String "Upper Free Surface"
@@ -351,7 +329,7 @@ Solver 11
   Exported Variable 2 DOFS = 1
 End
 
-Solver 12
+Solver 11
   Equation = String "ResultOutput"
   Procedure = File "ResultOutputSolve" "ResultOutputSolver"
   Save Geometry Ids = Logical True
@@ -375,26 +353,26 @@ Solver 12
   Scalar Field 13 = temperature
   Scalar Field 14 = pressure
   Scalar Field 15 = thickness
-  Scalar Field 16 = glen enhancement factor
-  Scalar Field 17 = proj_bed
+ ! Scalar Field 16 = glen enhancement factor
+  Scalar Field 16 = proj_bed
   Vector Field 1 = velocity
-  Vector Field 2 = dvu_ext 
+ ! Vector Field 2 = dvu_ext 
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Equation 1
-  Active Solvers (8) = 1 2 3 4 6 8 9 12 
+  Active Solvers (7) = 1 2 3 5 7 8 11 ! 2 3 4 6 8 9 12 
 End
 
 Equation 2
-  Active Solvers (3) = 5 7 10 
+  Active Solvers (3) = 4 6 9 !5 7 10 
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
 
 Equation 3
-  Active Solvers (1) = 11 
+  Active Solvers (1) = 10 !11 
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
@@ -438,20 +416,13 @@ Boundary Condition 3
   Flow Force BC = Logical True
 
   Slip Coefficient 2 = Variable proj_beta, GroundedMask
-    REAL procedure "USF_CoV" "TenPowerA_masked" !has been ElmerIceUSF
+    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
   Slip Coefficient 3 = Variable proj_beta, GroundedMask
-    REAL procedure "USF_CoV" "TenPowerA_masked" !has been ElmerIceUSF
+    REAL procedure "ElmerIceUSF" "TenPowerA_masked" !has been USF_CoV
    
- ! Slip Coefficient 2 = Variable GroundedMask
- !    Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" 
- ! Slip Coefficient 3 = Variable GroundedMask
- !    Real LUA "IfThenElse((tx[0] > 0), 1.0e-04, 0.0)" 
-  !!Slip Coefficient derivative = Real 0.0
-  
   External Pressure = Variable Coordinate 3
     Real lua "sw_pressure(tx[0])"
-     !Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])"  !HAD BEEN USING TO APRIL 30
-
+     
   Slip Coefficient 1 = Variable Coordinate 3
      Real Procedure "ElmerIceUSF" "SeaSpring"
   Compute Sea Spring = Logical True

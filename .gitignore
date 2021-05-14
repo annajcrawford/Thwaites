@@ -10,6 +10,10 @@ batch*
 ./TG_S1/old/*
 ./TG_S1p5/old/*
 ./TG_S2/old/*
+./TG_S2/*.result
+./TG_S2/results/*
+./TG_S3/*.result
+./TG_S3/results/*
 ./TG_S3/vtuoutputs/*vtu
 ./TG_S4/vtuoutputs/*vtu
 ./TG_S4/*result*
@@ -31,3 +35,4 @@ Mesh/*
 *vtu
 *.so
 *.F90
+*.result
