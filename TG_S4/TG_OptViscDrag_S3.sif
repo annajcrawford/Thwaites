@@ -5,12 +5,11 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_S4_OptViscAlpha_GEF_SR63"
+$name="TG_S4_OptEA"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
 $LambdaReg=1.0e5
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -39,8 +38,8 @@ Simulation
   OutPut File = "$name$_.result"
   Output Intervals = 1
 
-  Restart File = "../TG_S2/results/TG_SR_noSS_run8.result"
-  Restart Position = 63 
+  Restart File = "../TG_S2/results/TG_SR_0513_Run1.result"
+  Restart Position = 59 
 
   Restart Variable 1  = String groundedmask
   Restart Variable 2  = String temperature
@@ -49,8 +48,11 @@ Simulation
   Restart Variable 5 = String FS upper
   Restart Variable 6 = String FS lower
   Restart Variable 7 = String proj_thickness
-  Restart Variable 8 = String glen enhancement factor
-  !Restart Variable 9 = String alpha
+  Restart Variable 8 = String proj_beta
+  !Restart Variable 9 = String glen enhancement factor
+
+  !BRING THIS IN IF STARTING FROM DRAG INVERSION
+  !Restart Variable 9 = String alpha 
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
@@ -92,12 +94,13 @@ Initial Condition 1
   mu = Variable TemperatureRel
     Real lua "initMu(tx[0])"
 
-  EF = Equals glen enhancement factor !Real 1.0, viscosity enhancement factor 
+  EF = Real 1.0 ! viscosity enhancement factor 
   
-  bottom EF = Equals glen enhancement factor !Real 1.0
+  bottom EF = Real 1.0
   
-  alpha = Real -3.0
-!  beta = Real -3.0
+!  alpha = Real -3.0
+  beta = proj_beta !Real -3.0 
+! or restart from drag inversion and set alpha to that field 
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -124,11 +127,11 @@ Material 1
  
 !! Viscosity defined as mu*EF^2 to ensure >0 and to 
 !! use mu as initial guess (here EF is an enhancement factor)
-!  Viscosity = Variable bottom EF, mu
-!    REAL procedure "USF_CoV" "Asquare_Scaled" !Was ElmerIceUSF
+  Viscosity = Variable bottom EF, mu
+    REAL procedure "ElmerIceUSF" "Asquare_Scaled" 
 
-   Viscosity = Variable bottom EF, mu
-     Real lua "visc(tx[0],tx[1])"
+   !Viscosity = Variable bottom EF, mu
+   !  Real lua "visc(tx[0],tx[1])"
 
 !!Worked
 !  Viscosity = Variable "bottom EF"
@@ -140,7 +143,7 @@ Material 1
 
 !!Try procedure then lua 
   Viscosity derivative = Variable bottom EF, mu 
-    REAL procedure "USF_CoV" "Asquare_d_Scaled" !WAs ElmerIceUSF
+    REAL procedure "ElmerIceUSF" "Asquare_d_Scaled"
 
 !   Viscosity derivative = Variable bottom EF, mu
 !     REAL lua "viscd(tx[0], tx[1])"
@@ -190,14 +193,15 @@ Solver 3
 
   Linear System Solver = Direct
   Linear System Direct Method = mumps
-  Mumps percentage increase working space = Integer 300
+  Mumps percentage increase working space = Integer 200
 
 !  Nonlinear System Max Iterations = Integer 100
-  Nonlinear System Max Iterations = Integer 40
-  Nonlinear System Convergence Tolerance  = Real 1.0e-1
+  Nonlinear System Max Iterations = Integer 50
+  Nonlinear System Convergence Tolerance  = Real 1.0e-7
   Nonlinear System Newton After Iterations = 50
   Nonlinear System Newton After Tolerance = 1.0e-5
   Nonlinear System Reset Newton = Logical True
+  Nonlinear System Abort Not Converged = Logical True
 
   Steady State Convergence Tolerance = Real 1.0e-10
 
@@ -207,7 +211,7 @@ Solver 3
   Solver Timing = Logical True
   Solver Timing Cumulative = Logical True
 
-  Exported Variable 1 = beta
+  Exported Variable 1 = alpha
   Exported Variable 1 DOFS = Integer 1
   Exported Variable 2 = -global CostValue
   Exported Variable 2 DOFS = Integer 1
@@ -218,16 +222,16 @@ Solver 3
   Exported Variable 4 DOFS = Integer 1
   Exported Variable 5 = TemperatureRel ! Temperature relative to pressure melting 
   Exported Variable 5 DOFS = Integer 1
-  Exported Variable 6 = bottom EF
-  Exported Variable 6 DOFs = Integer 1
-  Exported Variable 7 = DJDBeta
-  Exported Variable 7 DOFS = Integer 1
-  Exported Variable 8 = DJDEF
-  Exported Variable 8 DOFS = Integer 1
-  Exported Variable 9 = EF
-  Exported Variable 9 DOFS = Integer 1
-  Exported Variable 10 = alpha
-  Exported Variable 10 DOFS = Integer 1
+  !Exported Variable 6 = bottom EF
+  !Exported Variable 6 DOFs = Integer 1
+  !Exported Variable 7 = DJDBeta
+  !Exported Variable 7 DOFS = Integer 1
+  !Exported Variable 8 = DJDEF
+  !Exported Variable 8 DOFS = Integer 1
+  !Exported Variable 9 = EF
+  !Exported Variable 9 DOFS = Integer 1
+  !Exported Variable 10 = alpha
+  !Exported Variable 10 DOFS = Integer 1
 End
 
 !!! Compute Cost function
@@ -340,7 +344,7 @@ Solver 10
   procedure = "ElmerIceSolvers" "Adjoint_CostRegSolver"
 
   Cost Filename = File "CostReg_$name$.dat"
-  Optimized Variable Name = String "alpha"
+  Optimized Variable Name = String "Beta" !?Alpha
   Gradient Variable Name = String "DJDBeta"
   Cost Variable Name = String "CostValue"
   Lambda = Real $LambdaReg
@@ -430,8 +434,6 @@ Boundary Condition 1
    Real Procedure "ElmerIceUSF" "SeaPressure"
 
  Compute Sea Pressure = Logical True
-
- Normal-Tangential Velocity = Logical True !Wasn't included in R's script. Why?
 End
 
 Boundary Condition 2
@@ -454,8 +456,8 @@ Boundary Condition 3
   Normal-Tangential Velocity = Logical True  
 
   Velocity 1 = Real 0.0e0
-  Velocity 1 Condition = Variable GroundedMask !Added from Simple2SR
-    Real LUA "tx[0] + 0.5"
+  !Velocity 1 Condition = Variable GroundedMask !!!This in your previous steps but not R's sim inv
+    !Real LUA "tx[0] + 0.5"
 
   !Slip Coefficient 2 = Variable GroundedMask, alpha !Added from Simple2SR
   !   Real LUA "IfThenElse((tx[0] > 0), 10.0**tx[1], 0.0)"
@@ -463,7 +465,6 @@ Boundary Condition 3
   !   Real LUA "IfThenElse((tx[0] > 0), 10.0**tx[1], 0.0)"
   !Slip Coefficient derivative = Real 0.0
    
-  Flow Force BC = Logical True !Added From Simple2SR
 
   External Pressure = Variable Coordinate 3 !Added from Simple2SR
      Real LUA "IfThenElse((tx[0] > 0), 0.0,-rhoo*gravity*tx[0])"  !CHANGE BACK TO SW_PRESSURE?
@@ -471,14 +472,6 @@ Boundary Condition 3
   Slip Coefficient 1 = Variable Coordinate 3 !ADded from Simple2SR
      Real Procedure "ElmerIceUSF" "SeaSpring"
   Compute Sea Spring = Logical True !Added from Simple2SR
-
-  !!!Trying Freeslip (should do the same thing as TenPowerA_masked)
-  Slip Coefficient 2  = Variable alpha
-       Real Procedure "ElmerIceUSF" "FreeSlipShelves" 
-  Slip Coefficient 3  = Variable alpha 
-       Real Procedure "ElmerIceUSF" "FreeSlipShelves" 
-  FreeSlipShelves mask name = String "GroundedMask"
-  FreeSlipShelves beta formulation = String "Power"
 
   !!!Original
   !Slip Coefficient 2 = Variable beta, GroundedMask

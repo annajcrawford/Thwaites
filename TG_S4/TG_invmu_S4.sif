@@ -22,6 +22,7 @@ Constants
   Buoyancy Use Basal Melt = Logical False
   sea level = Real #zsl
   water density = Real #rhoo
+  Sea spring timestep....
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -96,7 +97,7 @@ Initial Condition 1
   EF = Real 1.0 
   bottom EF = Real 1.0
 
-  alpha = Real -3.0 !(or can try Alpha = Equals Beta (or proj_beta)
+  alpha = Real -3.0 !(or can try Alpha = Equals Beta (or proj_beta), or could start from drag inversion
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
