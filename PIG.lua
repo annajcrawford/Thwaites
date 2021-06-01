@@ -53,7 +53,7 @@ Mmincoarse=5000.0
 Mmaxfar=11000.0
 
 -- ## Maximum mesh size close to the grounding line
-Mmaxclose=700.0
+Mmaxclose=500.0
 
 -- ## maximum mesh size for ice shelves (set this to larger than
 -- ## Mmaxfar if you want it to be ignored)
@@ -65,7 +65,7 @@ Mmaxshelf=1700.0
 -- ## have max mesh size Mmaxclose.  Max mesh is allowed to be
 -- ## coarser for sections of slower flowing GL.  Set this very
 -- ## small (e.g. 0.1) if you want it to be ignored.
-refvel = 800.0
+refvel = 0.1
 
 -- ## The distance from grounding line at which the upper limit for
 -- ## the maximum mesh size is reached

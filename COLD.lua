@@ -103,9 +103,6 @@ function glCondition(glMask,vel,velCutoff)
   else
     cond = -1.0
   end
-  if ( vel < velCutoff ) then
-    cond = -1.0
-  end
   return cond
 end
 
@@ -162,8 +159,8 @@ function setmaxmesh(gldist,bdist,vel,glmask)
   if velfactor < 0.5 then
     velfactor = 0.5
   end
-  Mmax = ( Mmaxclose*(1.0-distfactor) + Mmaxfar*distfactor ) / (velfactor)
-  if (glmask < 0.5) then
+  Mmax = ( Mmaxclose*(1.0-distfactor) + Mmaxfar*distfactor )
+  if (glmask < 0.5) then 
       if (Mmax > Mmaxshelf) then
       Mmax = Mmaxshelf
     end
@@ -184,7 +181,7 @@ function setminmesh(gldist,bdist,glmask)
   if (bdist < Bdistlim) then
     distfactor = 0
   end
-  Mmin = Mminfine*(1.0-distfactor) + Mmincoarse*distfactor
+  Mmin = Mminfine*(1.0-distfactor) + Mmincoarse*distfactor 
   if (glmask < 0.5) then
     if (Mmin > (Mmaxshelf - 50.0) ) then
       Mmin = Mmaxshelf - 50.0

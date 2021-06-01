@@ -29,7 +29,7 @@ outerLinTol       = 1e-6    -- Linear convergence tolerance for outer loop in bl
 
 -- ## Mesh refinement parameters
 
--- ##  the name of the mesh to optimize
+-- ##  the name of the mesh to optimtimesteize
 MESH_IN="mesh2D_TG"
 
 MESH_OUT="mesh2D_TG_refined"

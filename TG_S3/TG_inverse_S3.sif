@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_S3_0517_Run3"
+$name="TG_S3_0531_Run1"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -26,7 +26,7 @@ Simulation
   Coordinate System  = Cartesian 3D 
   Simulation Type = Steady State
  
-  Timestep size = 0.01469772
+  Timestep size = Real 0.01469772
 
   Extruded Mesh Levels = #MLEV
   Extruded Mesh Density = Variable Coordinate 1
@@ -38,8 +38,8 @@ Simulation
   OutPut File = "$name$_.result"
   Output Intervals = 5
 
-  Restart File = "../TG_S2/results/TG_SR_0513_Run1.result"
-  Restart Position = 59
+  Restart File = "../TG_S2/results/TG_SR_0528_Run2.result"
+  Restart Position = 76
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
@@ -101,9 +101,10 @@ Material 1
 
   Density = Real #rhoi
   
-  Viscosity Model = String "glen"
+  Viscosity Model = String "power law" !was glen
+  Viscosity Exponent = Real #m
   Viscosity = 1.0 ! Dummy but avoid warning output
-  Glen Exponent = Real #n
+  !Glen Exponent = Real #m !was #n
 
   !Glen Enhancement Factor = Variable dvu_ext
     !Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
@@ -112,12 +113,12 @@ Material 1
   Relative Temperature = Variable Temperature, Pressure
     Real lua "relativetemp(tx[0],tx[1])"
 
-  Limit Temperature = Real -10.0
-  Rate Factor 1 = Real #A1
-  Rate Factor 2 = Real #A2
-  Activation Energy 1 = Real #Q1
-  Activation Energy 2 = Real #Q2
-  Glen Enhancement Factor = Real 1.0
+  !Limit Temperature = Real -10.0
+  !Rate Factor 1 = Real #A1
+  !Rate Factor 2 = Real #A2
+  !Activation Energy 1 = Real #Q1
+  !Activation Energy 2 = Real #Q2
+  !Glen Enhancement Factor = Real 1.0
   Critical Shear Rate = Real 1.0e-10
 End
 

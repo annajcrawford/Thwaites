@@ -1,15 +1,30 @@
-
-####################################
-Elmer environment loaded
-elmerice_InvDev branch for inversion
-development.
-In case of problems: rupertgladstone1972@gmail.com
-                 or: zwinger@csc.fi
-####################################
+xc######################################
+# Elmer 9.0 ( devel_f888395 ) 
+#            environment loaded
+# date:  Thu May 27 22:41:27 EEST 2021
+# this version includes
+# * Elmer/Ice
+# * Hypre
+# * Mumps
+# * NetCDF (GridDataReader)
+# * MMG
+# * Zoltan
+# * Lua
+# * ScatteredDataInterpolator (CSA,NN)
+#   
+# OpenMP is enabled
+# In case of problems: zwinger@csc.fi
+######################################
 
 The following have been reloaded with a version change:
   1) openblas/0.3.10 => openblas/0.3.10-omp
 
-srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-slurmstepd: error: *** STEP 528638.0 ON c1304 CANCELLED AT 2021-04-29T18:13:56 DUE TO TIME LIMIT ***
-slurmstepd: error: *** JOB 528638 ON c1304 CANCELLED AT 2021-04-29T18:13:56 DUE TO TIME LIMIT ***
+slurmstepd: error: c2311 [0] pmixp_client_v2.c:210 [_errhandler] mpi/pmix: ERROR: Error handler invoked: status = -25: Interrupted system call (4)
+slurmstepd: error: *** STEP 581106.0 ON c2311 CANCELLED AT 2021-05-28T13:21:48 ***
+srun: Job step aborted: Waiting up to 62 seconds for job step to finish.
+slurmstepd: error: executing slurm task_epilog: fork: Cannot allocate memory
+srun: error: c2311: task 23: Killed
+srun: Terminating job step 581106.0
+slurmstepd: error: c2311 [0] pmixp_client_v2.c:210 [_errhandler] mpi/pmix: ERROR: Error handler invoked: status = -25: Success (0)
+srun: error: c2311: tasks 0,2-4,6-7,9,11-22,24-71,73-95,97-116,118-121,123-127: Killed
+srun: error: Timed out waiting for job step to complete

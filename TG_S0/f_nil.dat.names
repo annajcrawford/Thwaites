@@ -1,8 +1,8 @@
 Elmer version: 9.0
-Elmer revision: 33ced1c
-Elmer compilation date: 2020-12-23
+Elmer revision: f888395
+Elmer compilation date: 2021-05-27
 Solver input file: tg_mesh_s0.sif
-File started at: 2021/02/10 19:23:47
+File started at: 2021/05/31 12:09:26
  
 Variables in columns of matrix: ./f_nil.dat
    1: value: time scalar variable

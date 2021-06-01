@@ -21,6 +21,7 @@ Constants
   rhoo = Real #rhoo
   rhoi = Real #rhoi
   gravity = Real #gravity
+  water density = Real #rhoo
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -39,7 +40,7 @@ Simulation
   Output Intervals = 1
 
   Restart File = "../TG_S2/results/TG_SR_0513_Run1.result"
-  Restart Position = 59 
+  Restart Position = 59
 
   Restart Variable 1  = String groundedmask
   Restart Variable 2  = String temperature
@@ -51,8 +52,12 @@ Simulation
   Restart Variable 8 = String proj_beta
   !Restart Variable 9 = String glen enhancement factor
 
-  !BRING THIS IN IF STARTING FROM DRAG INVERSION
+  !!BRING THIS IN IF STARTING FROM DRAG INVERSION
   !Restart Variable 9 = String alpha 
+
+  !!BRING THESE IN IF STARTING FROM DRAG AND THEN VISCOSITY INVERSIONS
+  !Restart Variable 10  = String ef
+  !Restart Variable 11  = String bottom ef
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
