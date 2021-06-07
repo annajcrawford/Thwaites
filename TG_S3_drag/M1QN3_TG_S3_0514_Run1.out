@@ -1,0 +1,311 @@
+ ******** M1QN3 Output file ************
+05/14/2021     16:09:30
+ *****************************************
+ -------------------------------------------------------------------------------
+ M1QN3 Copyright (C) 2008, J. Ch. Gilbert, Cl. Lemarechal.
+ -------------------------------------------------------------------------------
+ This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+ are welcome to redistribute it under certain conditions. See the file COPYING 
+ in the root directory of the M1QN3 distribution for details.
+ -------------------------------------------------------------------------------
+
+ M1QN3 (Version 3.3, October 2009): entry point
+     dimension of the problem (n):         44529
+     absolute precision on x (dxmin):          1.00D-10
+     expected decrease for f (df1):            4.88D+09
+     relative precision on g (epsg):           1.00D-06 (dfn-norm)
+     maximal number of iterations (niter):   300
+     maximal number of simulations (nsim):   300
+     printing level (impres):                  5
+     reverse communication
+
+ m1qn3: Scalar Initial Scaling mode
+
+     allocated memory (ndz) :  1914777
+     used memory :             1914767
+     number of updates :            20
+     (y,s) pairs are stored in core memory
+
+ m1qn3: cold start
+
+     f             =  9.75908079D+09
+     dfn-norm of g =  6.29994681D+08
+
+ m1qn3a: descent direction -g: precon =  0.246D-07
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 1, simul 1, f= 9.75908079D+09, h'(0)=-9.75908D+09
+
+ m1qn3: line search
+
+     mlis3       fpn=-9.759D+09 d2= 2.40D+02  tmin= 1.26D-11 tmax= 1.00D+20
+     mlis3     1.000D+00 -2.326D+09 -4.405D+08
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.242D-07
+
+ m1qn3: stopping criterion on g:  2.45873D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  13.3 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 2, simul 2, f= 7.43307460D+09, h'(0)=-6.36203D+08
+
+ m1qn3: line search
+
+     mlis3       fpn=-6.362D+08 d2= 1.78D+01  tmin= 1.88D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -3.349D+08 -2.731D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  2.72458D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.169D-07
+
+ m1qn3: stopping criterion on g:  1.82153D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  39.5 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 3, simul 3, f= 7.09820157D+09, h'(0)=-2.45194D+08
+
+ m1qn3: line search
+
+     mlis3       fpn=-2.452D+08 d2= 7.67D+00  tmin= 1.75D-10 tmax= 1.00D+20
+     mlis3                                      1.000D+00  8.006D+07  4.078D+08
+     mlis3     3.782D-01 -4.641D+07  4.537D+04
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  2.48077D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.355D-09
+
+ m1qn3: stopping criterion on g:  7.89015D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  81.1 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 4, simul 5, f= 7.05179472D+09, h'(0)=-9.05709D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-9.057D+07 d2= 1.39D+00  tmin= 4.38D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -7.740D+07 -6.410D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  1.12500D+00
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.314D-09
+
+ m1qn3: stopping criterion on g:  6.98179D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  80.8 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 5, simul 6, f= 6.97439902D+09, h'(0)=-4.03712D+08
+
+ m1qn3: line search
+
+     mlis3       fpn=-4.037D+08 d2= 3.30D+01  tmin= 8.59D-11 tmax= 1.00D+20
+     mlis3     1.000D+00 -2.353D+08 -3.971D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  4.87969D+00
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.131D-08
+
+ m1qn3: stopping criterion on g:  9.74465D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  81.9 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 6, simul 7, f= 6.73913301D+09, h'(0)=-2.77153D+08
+
+ m1qn3: line search
+
+     mlis3       fpn=-2.772D+08 d2= 1.04D+01  tmin= 1.44D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -1.086D+08  5.933D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  5.60521D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.543D-09
+
+ m1qn3: stopping criterion on g:  9.57386D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  72.4 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 7, simul 8, f= 6.63048722D+09, h'(0)=-1.36440D+08
+
+ m1qn3: line search
+
+     mlis3       fpn=-1.364D+08 d2= 5.59D-01  tmin= 5.66D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -5.693D+07  2.244D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  2.32097D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.272D-09
+
+ m1qn3: stopping criterion on g:  3.56262D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  80.2 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 8, simul 9, f= 6.57356169D+09, h'(0)=-1.46711D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-1.467D+07 d2= 1.47D-01  tmin= 6.60D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -1.000D+07 -5.337D+06
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  5.12052D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.329D-09
+
+ m1qn3: stopping criterion on g:  1.50848D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  77.3 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 9, simul 10, f= 6.56355703D+09, h'(0)=-1.05905D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-1.059D+07 d2= 2.55D-01  tmin= 3.88D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -8.565D+06 -6.539D+06
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  1.31925D+00
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.425D-09
+
+ m1qn3: stopping criterion on g:  1.42972D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  79.3 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 10, simul 11, f= 6.55499198D+09, h'(0)=-2.55600D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-2.556D+07 d2= 2.34D+00  tmin= 1.25D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -1.888D+07 -1.220D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  3.02930D+00
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.616D-09
+
+ m1qn3: stopping criterion on g:  3.12868D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  86.1 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 11, simul 12, f= 6.53611240D+09, h'(0)=-3.63892D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-3.639D+07 d2= 7.37D+00  tmin= 7.05D-11 tmax= 1.00D+20
+     mlis3     1.000D+00 -2.560D+07 -1.473D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  1.77369D+00
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.553D-09
+
+ m1qn3: stopping criterion on g:  5.00268D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  87.7 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 12, simul 13, f= 6.51051696D+09, h'(0)=-6.89770D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-6.898D+07 d2= 3.06D+01  tmin= 3.46D-11 tmax= 1.00D+20
+     mlis3     1.000D+00 -3.665D+07  1.856D+06
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  2.03860D+00
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.574D-09
+
+ m1qn3: stopping criterion on g:  6.76393D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  87.4 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 13, simul 14, f= 6.47386332D+09, h'(0)=-5.80651D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-5.807D+07 d2= 9.12D+00  tmin= 6.43D-11 tmax= 1.00D+20
+     mlis3     1.000D+00 -3.214D+07  2.220D+06
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  5.45785D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.512D-09
+
+ m1qn3: stopping criterion on g:  4.78680D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  83.1 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 14, simul 15, f= 6.44171838D+09, h'(0)=-7.84522D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-7.845D+07 d2= 4.66D+00  tmin= 9.97D-11 tmax= 1.00D+20
+     mlis3     1.000D+00 -2.832D+07  1.734D+07
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  7.14595D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.647D-09
+
+ m1qn3: stopping criterion on g:  4.12153D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  86.5 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 15, simul 16, f= 6.41339563D+09, h'(0)=-2.38577D+07
+
+ m1qn3: line search
+
+     mlis3       fpn=-2.386D+07 d2= 2.26D+00  tmin= 1.28D-10 tmax= 1.00D+20
+     mlis3     1.000D+00 -1.468D+07 -4.211D+06
+
+ m1qn3: convergence rate, s(k)/s(k-1) =  6.97189D-01
+
+ m1qn3: matrix update:
+     Oren-Spedicato factor =  0.339D-09
+
+ m1qn3: stopping criterion on g:  2.16248D-01
+
+ m1qn3: descent direction d: angle(-g,d) =  81.8 degrees
+
+ -------------------------------------------------------------------------------
+
+ m1qn3: iter 16, simul 17, f= 6.39871698D+09, h'(0)=-8.63913D+06
+
+ m1qn3: line search
+
+     mlis3       fpn=-8.639D+06 d2= 1.98D-01  tmin= 4.82D-10 tmax= 1.00D+20

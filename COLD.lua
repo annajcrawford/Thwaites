@@ -3,24 +3,40 @@
 
 yearinsec = 365.25 * 24.0 * 60.0 * 60.0
 Pa2MPa = 1.0E-06
-rhoi = 917.0 / (1.0e6 * yearinsec^2)
-gravity = -9.81 * yearinsec^2
+MPainPa = 1.0e6
 
--- ## Ice fusion latent heat (0.335×106 J kg−1)
-Lf = 0.335e06 * yearinsec^2.0
-
--- ## Sea level elevation
-zsl = 0.0
+rhoi_si = 917.0  -- ## ice density in kg/m^3
+rhoi    = rhoi_si / (1.0e6 * yearinsec^2)
 
 -- ## ocean water density
 rhoo = 1027.0 / (1.0e6 * yearinsec^2.0)
 
+-- ## fresh water density
+rhow = 1000.0 / (1.0e6 * yearinsec^2.0)
+
+gravity = -9.81 * yearinsec^2
+gravity_abs = -gravity
+
+-- ## Ice fusion latent heat)
+Lf = 334000.0 -- ## Joules per kg
+-- ## Lf = 334.0 -- ## Joules per gram
+-- ## Lf = 0.335e06 * yearinsec^2.0 -- ## some old Elmer units conversion thing?  Not used I think...
+
+-- ## Sea level elevation
+zsl = 0.0
+
 -- ## Specific heat of ocean water (4218 J kg−1 K−1)
 cw = 4218.0 * yearinsec^2.0
 
+-- ## prescribed salinity at ice base for calculating ocean pressure melting temperature.  PSU.
+Salinity_b = 35.0
+
 --  For Glen's flow law (Paterson 2010)
 n = 3.0
+ng = n
 m = 1.0/n
+A1_SI = 3.985e-13
+A2_SI = 1.916e03
 A1 = 2.89165e-13*yearinsec*1.0e18 
 A2 = 2.42736e-02*yearinsec*1.0e18 
 Q1 = 60.0e3
@@ -33,12 +49,9 @@ eta = 1.0/(2.0*A)^(1.0/n)
 -- ## GLToleranceInit=1.0e-1
 GLTolerance=1.0e-3
 
-
 --  Temperature of the simulation in Celsius
 --  with the formula for A works only if T > -10
 Tc=-1.0
-
-
 
 -- ##########################################################
 -- hard coded paths to forcing data
@@ -283,7 +296,6 @@ end
 
 -- ## inputs: TinC is temperature in Centigrade, p is pressure. 
 -- ## Returns temperature relative to pressure melting point.
--- ## ANNA CHANGED TO ADDITION FOR CALC OF tREL!
 function relativetemp(TinC,p)
   pe = p
   if (pe < 0.0) then
@@ -305,19 +317,21 @@ function pressuremelting(p)
   return Tpmp
 end
 
+-- ##Testing with line: mu = viscosity, which previously was mu = math.sqrt(viscosity)
 function initMu(TempRel)
   if (TempRel < Tlim) then
-    AF = 3.985e-13 * math.exp( -60.0e03/(8.314 * (273.15 + TempRel)))
+    AF = A1_SI * math.exp( -Q1/(8.314 * (273.15 + TempRel)))
   elseif (TempRel > 0) then
-    AF = 1.916e03 * math.exp( -139.0e03/(8.314 *  (273.15)))
+    AF = A2_SI * math.exp( -Q2/(8.314 * (273.15)))
   else
-    AF = 1.916e03 * math.exp( -139.0e03/(8.314 *  (273.15 + TempRel)))
+    AF = A2_SI * math.exp( -Q2/(8.314 * (273.15 + TempRel)))
   end
-  glen = (2.0 * AF)^(-1.0/3.0)
-  viscosity = glen * yearinsec^(-1.0/3.0)  * Pa2MPa
-  mu = math.sqrt(viscosity)
+  glen = (2.0 * AF)^(-1.0/n)
+  viscosity = glen * yearinsec^(-1.0/n) * Pa2MPa
+  mu = math.sqrt(viscosity )
   return mu
 end
+
 
 function visc(bottomEF, mu)
   v = bottomEF * bottomEF * mu
