@@ -1,3 +1,4 @@
+
 -- ##########################################################
 -- ## Material parameters
 
@@ -8,14 +9,14 @@ MPainPa = 1.0e6
 rhoi_si = 917.0  -- ## ice density in kg/m^3
 rhoi    = rhoi_si / (1.0e6 * yearinsec^2)
 
+gravity = -9.81 * yearinsec^2
+gravity_abs = -gravity
+
 -- ## ocean water density
 rhoo = 1027.0 / (1.0e6 * yearinsec^2.0)
 
 -- ## fresh water density
 rhow = 1000.0 / (1.0e6 * yearinsec^2.0)
-
-gravity = -9.81 * yearinsec^2
-gravity_abs = -gravity
 
 -- ## Ice fusion latent heat)
 Lf = 334000.0 -- ## Joules per kg
@@ -29,22 +30,19 @@ zsl = 0.0
 cw = 4218.0 * yearinsec^2.0
 
 -- ## prescribed salinity at ice base for calculating ocean pressure melting temperature.  PSU.
-Salinity_b = 35.0
+Salinity_b = 35.0 
 
 --  For Glen's flow law (Paterson 2010)
-n = 3.0
+n  = 3.0
 ng = n
-m = 1.0/n
+m  = 1.0/n
 A1_SI = 3.985e-13
 A2_SI = 1.916e03
-A1 = 2.89165e-13*yearinsec*1.0e18 
-A2 = 2.42736e-02*yearinsec*1.0e18 
+A1 = A1_SI*yearinsec*1.0e18
+A2 = A2_SI*yearinsec*1.0e18
 Q1 = 60.0e3
-Q2 = 115.0e3
+Q2 = 139.0e3
 Tlim = -10.0
-
-A = 4.6416e-25*yearinsec*1.0e18
-eta = 1.0/(2.0*A)^(1.0/n)
 
 -- ## GLToleranceInit=1.0e-1
 GLTolerance=1.0e-3
@@ -53,16 +51,16 @@ GLTolerance=1.0e-3
 --  with the formula for A works only if T > -10
 Tc=-1.0
 
--- ##########################################################
--- hard coded paths to forcing data
 
--- VELOCITY_DATA = "/projappl/project_2002875/data/antarctic/antarctica_m2slim.nc"
+-- ##########################################################
+-- ## hard coded paths to forcing data
+
+VELOCITY_DATA = "/projappl/project_2002875/data/antarctic/antarctica_m2slim.nc"
 BETA_GUESS    = "/projappl/project_2002875/data/antarctic/aa_v3_e8_l11_beta.nc"
 SMB_DATA      = "/projappl/project_2002875/data/antarctic/smbref_1995_2014_mar.nc"
 
 datadir = "/projappl/project_2002875/data/antarctic/"
 outdir  = "./vtuoutputs"
-
 
 
 -- ##########################################################
@@ -78,6 +76,27 @@ function groundingline(thick,bed,surf)
   end
   return gl_mask
 end
+
+
+-- ## convert a viscosity enhancement factor to a 
+-- ## flow enhancement factor, with limits.
+function ConvertEF(viscEF,lowerLimit)
+  if (viscEF < lowerLimit) then
+    viscEF = lowerLimit
+  end
+  flowEF = 1.0 / viscEF
+  if (flowEF < lowerLimit) then
+    flowEF = lowerLimit
+  end
+  return flowEF
+end
+
+-- ## Scale the drag coefficient to tune thinning rates...
+function ScaleDragCoef(coef)
+  scaledCoef = coef*0.1
+  return scaledCoef
+end
+
 
 -- ## for imposing a velocity condition based on temperature
 -- ## input is temperature relative to pressure melting
@@ -116,24 +135,25 @@ function glCondition(glMask,vel,velCutoff)
   else
     cond = -1.0
   end
+  if ( vel < velCutoff ) then
+    cond = -1.0
+  end
   return cond
 end
 
--- ## set the distance at GL to non-zero values depending on flow speed...
--- ## (experimental; not currently used)
-function distBF(vel)
-  if vel > refvel then
-    dist = 0.0
-  else
-    dist = 100000.0 * (refvel - vel)/refvel
-  end
-  return dist
+-- ## function to scale a normal velocity slip coefficient 
+-- ## at the ice upper surface to restrict emergence 
+-- ## velocity (stronger constraint in slow flowing regions).
+function ControlEmergVel(vx,vy,upplim)
+  ScalingSpeed = 10.0
+  speed = math.sqrt(vx*vx + vy*vy)
+  SlipCoef = upplim*(1.0 - math.tanh(speed/ScalingSpeed))
 end
 
 -- ## function for setting an upper limit to mesh size based on distance
 -- ## (e.g. distance from grounding line)
 function refinebydist(distance)
-  factor = distance/GLdistlim
+  factor = distance/distlim
   if (factor < 0.0) then
     factor = 0.0
   end	   
@@ -142,65 +162,6 @@ function refinebydist(distance)
   end	   
   Mmax = Mmaxclose*(1.0-factor) + Mmaxfar*factor
   return Mmax
-end
-
--- ## function for setting an upper limit for mesh size
-function setmaxmesh(gldist,bdist,vel,glmask)
-  gldistfactor = gldist/GLdistlim
-  if (gldistfactor < 0.0) then
-    gldistfactor = 0.0
-  end	   
-  if (gldistfactor > 1.0) then
-    gldistfactor = 1.0
-  end	   
-  bdistfactor = bdist/Bdistlim
-  if (bdistfactor < 0.0) then
-    bdistfactor = 0.0
-  end	   
-  if (bdistfactor > 1.0) then
-    bdistfactor = 1.0
-  end	   
-  if (gldistfactor < bdistfactor) then
-    distfactor = gldistfactor
-  else
-    distfactor = bdistfactor
-  end
-  velfactor = vel/refvel
-  if (velfactor > 1.0) then
-    velfactor = 1.0
-  end
-  if velfactor < 0.5 then
-    velfactor = 0.5
-  end
-  Mmax = ( Mmaxclose*(1.0-distfactor) + Mmaxfar*distfactor )
-  if (glmask < 0.5) then 
-      if (Mmax > Mmaxshelf) then
-      Mmax = Mmaxshelf
-    end
-  end
-  return Mmax
-end
-
--- ## function for setting a lower limit for mesh size
-function setminmesh(gldist,bdist,glmask)
-  effectivedist = gldist - GLdistlim
-  if (effectivedist < 0.0) then
-    effectivedist = 0.0
-  end
-  distfactor = effectivedist / distscale
-  if (distfactor > 1.0) then
-    distfactor = 1.0
-  end
-  if (bdist < Bdistlim) then
-    distfactor = 0
-  end
-  Mmin = Mminfine*(1.0-distfactor) + Mmincoarse*distfactor 
-  if (glmask < 0.5) then
-    if (Mmin > (Mmaxshelf - 50.0) ) then
-      Mmin = Mmaxshelf - 50.0
-    end
-  end
-  return Mmin
 end
 
 -- ## set the lower surface for a given upper surface and thickness
@@ -241,13 +202,21 @@ function floatLower(thick,bed)
   return low_surf
 end  		
 
-
--- ## variable timestepping (TODO: dt_init and dt_max and dt_incr should be passed in) Remember dt_max was at 0.25
+-- ## variable timestepping (TODO: dt_init and dt_max and dt_incr should be passed in)
 function timeStepCalc(nt)
   dt_init = 0.00001
-  dt_max = 0.01469772 
+  dt_max = 0.25
   dt_incr = 1.15
   dt = dt_init * 1.2^nt 
+  if ( dt > dt_max ) then
+    dt = dt_max
+  end
+  return dt
+end
+
+-- ## variable timestepping
+function timeStepCalc2(nt, dt_init, dt_max, dt_incr)
+  dt = dt_init * dt_incr^nt 
   if ( dt > dt_max ) then
     dt = dt_max
   end
@@ -262,8 +231,8 @@ end
 
 -- ## heat capacity
 function capacity(T)
-  cpct = 146.3 + ( 7.253*T )
-  return cpct
+  c=146.3+(7.253*T)
+  return c
 end
 
 function sw_pressure(z)
@@ -317,7 +286,17 @@ function pressuremelting(p)
   return Tpmp
 end
 
--- ##Testing with line: mu = viscosity, which previously was mu = math.sqrt(viscosity)
+function pressuremelting_salinity(p)
+  pe = p
+  if (pe < 0.0) then
+    pe = 0.0
+  end  
+
+  Tpmp = 273.15 - 5.73e-02*Salinity_b + 9.39e-02 - 7.53e-08*1.0e06*pe
+
+  return Tpmp
+end
+
 function initMu(TempRel)
   if (TempRel < Tlim) then
     AF = A1_SI * math.exp( -Q1/(8.314 * (273.15 + TempRel)))
@@ -328,20 +307,10 @@ function initMu(TempRel)
   end
   glen = (2.0 * AF)^(-1.0/n)
   viscosity = glen * yearinsec^(-1.0/n) * Pa2MPa
-  mu = math.sqrt(viscosity )
-  return mu
+  return viscosity
 end
-
-
-function visc(bottomEF, mu)
-  v = bottomEF * bottomEF * mu
-  return v
-end
-
-function viscd(bottomEF, mu)
-  vd = 2 * bottomEF * mu
-  return vd
-end
+--  mu = math.sqrt(viscosity)
+--  return mu
 
 function limitslc(slc)
   slco = slc
@@ -385,7 +354,3 @@ function initbeta(slc)
   dummy = slc + 0.00001
   return  math.log(dummy)
 end  
-
-function IfThenElse(condition,t,f) 
-   if condition then return t else return f end 
- end 

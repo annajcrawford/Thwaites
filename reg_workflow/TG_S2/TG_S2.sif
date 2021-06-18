@@ -1,14 +1,14 @@
+
 !---LUA BEGIN
-! assert(loadfile('../COLD.lua'))()
-! assert(loadfile('../PIG.lua'))()
+! assert(loadfile('../../COLD.lua'))()
+! assert(loadfile('../../PIG.lua'))()
 !---LUA END
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_SR_0631_Run1"
+$name="TG_SR_0611_Run2"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
-  Mesh DB "." "#meshdb#"
+  Mesh DB "../" "#meshdb#"
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -21,15 +21,12 @@ Constants
   ! parameters for the ismip6 basal melt
   ! (seems to be mostly in SI units)
   gamma 0 = Real -11075.0 ! unit: m/yr
-  Ice Density = Real #rhoi
-  SW Density = Real #rhoo
+  Ice Density = Real 910.0
+  SW Density = Real 1025.0
   Latent Heat = Real #Lf  !3.34e05
   SW Cp = Real 3974.0
-
-  rhoo = Real #rhoo
-  rhoi = Real #rhoi
-  gravity = Real #gravity
 End
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Simulation
@@ -41,23 +38,23 @@ Simulation
   Timestep Intervals = 76
   Timestep Size = Variable "Timestep"
     Real lua "timeStepCalc(tx[0])"
-  !TimeStep Size = 0.0001
   Output Intervals = 1
-
-  Extruded Mesh Levels = #MLEV
-  Extruded Mesh Density = Variable Coordinate 1
-    Real MATC "1.0 + 2.5 * tx"
 
   Steady State Min Iterations = 1
   Steady State Max Iterations = 1
 
-  Output File = "$name$.result" 
-  !Post File = "$name$_.vtu"
+  Output File = "$name$.result"
 
-  Restart File = "../TG_S1p5/results/readnc_tempc_transient.result"
+  Restart File = "../reg_workflow/TG_S1/results/readnc.result"
   Restart Position = 0
+  Restart Time = Real 2015.0
+
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
+
+  Extruded Mesh Levels = #MLEV
+  Extruded Mesh Density = Variable Coordinate 1
+    Real MATC "1.0 + 2.5 * tx"
 
   max output level = 9
 End
@@ -74,11 +71,13 @@ End
 Body 2
   Equation = 2
   Material = 2
+  !Body Force = 2
 End
 
 Body 3
   Equation = 3
   Material = 3
+  !Body Force = 3
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -86,11 +85,17 @@ Initial Condition 1
   Temperature = Variable temp_c
     Real lua "K2C(tx[0])"
 
-  FS lower = Variable proj_thickness, proj_bed
+  FS lower = Variable thickness, bed
     Real lua "floatLower(tx[0],tx[1])"
-  FS upper = Variable proj_thickness, proj_bed
+  FS upper = Variable thickness, bed
     Real lua "floatUpper(tx[0],tx[1])"
 End
+
+!Initial Condition 2
+!  bmb = Real 0.0
+!End
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Body Force 1
@@ -98,6 +103,20 @@ Body Force 1
   Flow BodyForce 2 = Real 0.0                          
   Flow BodyForce 3 = Real #gravity
 End
+
+!Body Force 2
+!  FS lower Accumulation Flux 1 = Real 0.0e0
+!  FS lower Accumulation Flux 2 = Real 0.0e0
+!!  FS lower Accumulation Flux 3 = Real 0.0e0
+!  FS lower Accumulation Flux 3 = Variable bmb
+!    Real MATC "0.0 - tx"
+!End
+
+!Body Force 3
+!  FS upper Accumulation Flux 1 = Real 0.0e0
+!  FS upper Accumulation Flux 2 = Real 0.0e0
+!  FS upper Accumulation Flux 3 = Equals smbref
+!End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! ice material properties in MPa - m - a system 
@@ -111,7 +130,7 @@ Material 1
   Glen Exponent = Real 3.0
   Glen Enhancement Factor = Real 1.0
      
-  Limit Temperature = Real #Tlim
+  Limit Temperature = Real -10.0
   Relative Temperature = Variable Temperature, Pressure 
     Real lua "relativetemp(tx[0], tx[1])"
   
@@ -125,21 +144,24 @@ End
 
 Material 2
   Density = Real #rhoi
-  Min FS lower = Equals proj_bed
-  Min Zs Bottom = Equals proj_bed
+  Min FS lower = Equals bed
+  Min Zs Bottom = Equals bed
 End
 
 Material 3
   Density = Real #rhoi
-  Min FS upper = variable "proj_bed"
+  Min FS upper = variable "bed"
     Real lua "tx[0] + MINH"
 End
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! First 4 solvers are for the basal melt rate.
+! Deltat_basin could have been read in during previous simulation (S1)
+! but t_forcing needs to be read in here because it needs the mesh to
+! be already extruded before reading in.
 Solver 1
-  !Exec Solver = "never"
-  Exec Solver = "Before Simulation"
+  Exec Solver = "Before All"
   Equation = "MapCoordinate_init"
   Procedure = "StructuredMeshMapper" "StructuredMeshMapper"
 
@@ -152,6 +174,54 @@ Solver 1
 End
 
 Solver 2
+  Exec Solver = "before all"
+  equation = "DeltaT"
+  procedure = "GridDataReader" "GridDataReader"
+  Filename = File #datadir#"coeff_gamma0_deltat_quadratic_local_median.nc"
+  X Dim Name = String "X"
+  Y Dim Name = String "Y"
+  X Var Name = String "x"
+  Y Var Name = String "y"
+  Epsilon X = Real 1.0e-2
+  Epsilon Y = Real 1.0e-2
+  Interpolation Bias = Real 0.0
+  Interpolation Multiplier = Real 1.0
+  Variable 1 = deltat_basin
+  Target Variable 1 = deltat_basin
+  Enable Scaling = Logical False
+End
+
+Solver 3
+  Exec Solver = "before timestep"
+  equation = "TFeq"
+  procedure = "GridDataReader" "GridDataReader"
+  Filename = File #datadir#"obs_thermal_forcing_1995-2017_8km_x_60m.nc"
+  X Dim Name = String "x"
+  Y Dim Name = String "y"
+  Z Dim Name = String "z"
+  X Var Name = String "x"
+  Y Var Name = String "y"
+  Z Var Name = String "z"
+  Epsilon X = Real 1.0e-2
+  Epsilon Y = Real 1.0e-2
+  Interpolation Bias = Real 0.0
+  Interpolation Multiplier = Real 1.0
+  Variable 1 = thermal_forcing
+  Target Variable 1 = String "t_forcing"
+  Enable Scaling = Logical False
+End
+
+Solver 4
+   Exec Solver = "Before Timestep"
+   Equation = "Get Meltrate"
+   Procedure = "MeltrateSolver" "MeltrateSolver"
+   Nonlocal Melt Rate = Logical False !would be anyhow the default
+   Meltrate Mask = String "GroundedMask"
+   Variable = bmb
+   Variable DOFs = 1
+End
+
+Solver 5
   !Exec Solver = "never"
   Exec Solver = "Before Timestep"
   Equation = "MapCoordinate"
@@ -165,7 +235,7 @@ Solver 2
   Correct Surface = Logical True
 End
 
-Solver 3
+Solver 6
   Equation = "HeightDepth"
   Exec Solver = "Before Timestep"
   Procedure = "StructuredProjectToPlane" "StructuredProjectToPlane"
@@ -174,17 +244,16 @@ Solver 3
   Operator 2 = height
 End
 
-Solver 4
+Solver 7
   Exec Solver = Before all 
   Equation = "GroundedMask"
   Procedure = "ElmerIceSolvers" "GroundedSolver"
   Variable = GroundedMask
   Variable DOFs = 1
   Toler = Real #GLTolerance
-  Bedrock Variable = String "proj_bed" !NOT IN TG_relax_S2.sif but probably needed
 End
 
-Solver 5
+Solver 8
 !  Exec solver = never
   Equation = "Normal Vector"
   Procedure = "ElmerIceSolvers" "ComputeNormalSolver"
@@ -194,7 +263,7 @@ Solver 5
   Optimize Bandwidth = Logical False
 End
 
-Solver 6
+Solver 9
 !  Exec solver = never
   Equation = Fw
   Procedure = "ElmerIceSolvers" "GetHydrostaticLoads"
@@ -203,7 +272,7 @@ Solver 6
 End
 
 !!!! Navier-Stokes Solution
-Solver 7
+Solver 10
   Equation = "Navier-Stokes"  
   Stabilization Method = String Stabilized
   Flow Model = Stokes
@@ -236,11 +305,12 @@ Solver 7
   ! Convergence on timelevel (IS THIS REQUIRED HERE?)
   !---------------------------------------------
   Steady State Convergence Tolerance = Real 1.0e-8  
-
-  Exported Variable 1 = -dofs 1 "Temperature"
+  
+  Exported Variable 1 = "Temperature"
+  Exported Variable 1 DOFs = 1
 End
 
-Solver 8
+Solver 11
   Exec solver = "Never" !runs as never commented in by LAGS_relax_S2.sif
   Equation = String "StressSolver"
   Procedure =  File "ElmerIceSolvers" "ComputeDevStress"
@@ -265,7 +335,7 @@ Solver 8
   Linear System Residual Output = 1
 End
 
-Solver 9
+Solver 12
 ! Exec Solver = Never
   Exec Solver = "After TimeStep"
   Equation =  String "Lower Free Surface"
@@ -293,7 +363,7 @@ Solver 9
   Exported Variable 2 DOFS = 1
 End
 
-Solver 10
+Solver 13
 !  Exec Solver = Never
   Exec Solver = "After TimeStep"
   Equation =  String "Upper Free Surface"
@@ -321,7 +391,8 @@ Solver 10
   Exported Variable 2 DOFS = 1
 End
 
-Solver 11
+Solver 14
+  Exec Solver = String "after saving"
   Equation = String "ResultOutput"
   Procedure = File "ResultOutputSolve" "ResultOutputSolver"
   Save Geometry Ids = Logical True
@@ -329,40 +400,22 @@ Solver 11
   Output Format = String "vtu"
   Output Directory = File "./vtuoutputs"
   Vtu Format = Logical True
-  
-  Scalar Field 1  = bed
-  Scalar Field 2  = depth
-  Scalar Field 3  = fs upper
-  Scalar Field 4  = fs lower
-  Scalar Field 5  = groundedmask
-  Scalar Field 6 = height
-  Scalar Field 7 = proj_beta
-  Scalar Field 8 = proj_vobs
-  Scalar Field 9 = proj_vx
-  Scalar Field 10 = proj_vy
-  Scalar Field 11 = surface
-  Scalar Field 12 = proj_thickness
-  Scalar Field 13 = temperature
-  Scalar Field 14 = pressure
-  Scalar Field 15 = thickness
-  Scalar Field 16 = proj_bed
-  Vector Field 1 = velocity
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Equation 1
-  Active Solvers (7) = 1 2 3 5 7 8 11
+  Active Solvers (11) = 1 2 3 4 5 6 8 9 10 11 14
 End
 
 Equation 2
-  Active Solvers (3) = 4 6 9  
+  Active Solvers (2) = 7 12
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
 
 Equation 3
-  Active Solvers (1) = 10  
+  Active Solvers (1) = 13
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
@@ -399,22 +452,20 @@ Boundary Condition 3
   Velocity 1 Condition = Variable GroundedMask !3 when N-T vel is FALSE 
     Real LUA "tx[0] + 0.5"
   
-  FS Lower = Equals proj_bed
+  FS Lower = Equals bed
   FS Lower condition = Variable GroundedMask
      Real MATC "tx + 0.5" 
 
   Flow Force BC = Logical True
 
-  Slip Coefficient 2 = Variable proj_beta, GroundedMask !SC 1 when N-T vel is FALSE
+  Slip Coefficient 2 = Variable beta, GroundedMask !SC 1 when N-T vel is FALSE
     REAL procedure "ElmerIceUSF" "TenPowerA_masked" 
-  Slip Coefficient 3 = Variable proj_beta, GroundedMask !SC 2 when N-T vel is FALSE
+  Slip Coefficient 3 = Variable beta, GroundedMask !SC 2 when N-T vel is FALSE
     REAL procedure "ElmerIceUSF" "TenPowerA_masked" 
    
   External Pressure = Variable Coordinate 3!
     Real lua "sw_pressure(tx[0])"
- 
- ! Slip Coefficient 1 = Real 3.0e-5 !3 when N-T vel is FLASE
-     
+   
   Slip Coefficient 1 = Variable Coordinate 3 !Slip coefficient 3 when N-T vel is FALSE
      Real Procedure "ElmerIceUSF" "SeaSpring"
   Compute Sea Spring = Logical True
@@ -425,6 +476,4 @@ Boundary Condition 4
   Name= "Surface" 
   Body Id = 3
   Depth = Real 0.0
-  Normal-Tangential Velocity = Logical TRUE !FALSE when applying vertical change to ice shelf only
-  !Slip Coefficient 1 = Real 3.0e-5 !SC 3 when N-T vel is FALSE
 End 

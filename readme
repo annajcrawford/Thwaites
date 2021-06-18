@@ -11,3 +11,10 @@ after the projection through the medium in TG_S1p5 of vu and vx (proj_vu, proj_v
 
 TG_S2/Simple_TG_S3.sif = pre-steps to Simple2SR.sif. Not needed for running anymore. 
 
+TG_S2/TG_SR.sif = sif for surface relaxation as of June 7, 2021
+
+TG_Hrestricted/** = tests with horizontally restricted SR with vertical restriction also over grounded ice. VSS = vertical sea spring, SCval = assigned constant vertical slip coefficient. S2 = SR, S3 = drag inversion
+
+TG_S3 = viscosity EF inversion
+
+TG_S4 = basal shear stress inversion 

@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_SR_0631_Run1"
+$name="TG_SR_0602_Run1"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -90,6 +90,9 @@ Initial Condition 1
     Real lua "floatLower(tx[0],tx[1])"
   FS upper = Variable proj_thickness, proj_bed
     Real lua "floatUpper(tx[0],tx[1])"
+
+  !dvu_ext = Variable proj_dvu 1, proj_dvu 2
+    !Real lua "math.sqrt(tx[0]*tx[0] + tx[1]*tx[1] )"  
 End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -97,6 +100,8 @@ Body Force 1
   Flow BodyForce 1 = Real 0.0                          
   Flow BodyForce 2 = Real 0.0                          
   Flow BodyForce 3 = Real #gravity
+  Velocity 1 = Real 0.0 !horizontal restricted flow
+  Velocity 2 = Real 0.0 !horizontal restricted flow
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -110,7 +115,9 @@ Material 1
 
   Glen Exponent = Real 3.0
   Glen Enhancement Factor = Real 1.0
-     
+  !Glen Enhancement Factor = Variable dvu_ext
+  !  Real lua "IfThenElse((tx[0] < 0.3), 1.0,10.0)"
+   
   Limit Temperature = Real #Tlim
   Relative Temperature = Variable Temperature, Pressure 
     Real lua "relativetemp(tx[0], tx[1])"
@@ -238,6 +245,8 @@ Solver 7
   Steady State Convergence Tolerance = Real 1.0e-8  
 
   Exported Variable 1 = -dofs 1 "Temperature"
+  !Exported Variable 2 = -dofs 1 "dvu_ext"
+  !Exported Variable 3 = -dofs 1 "glen enhancement factor"
 End
 
 Solver 8
@@ -257,6 +266,7 @@ Solver 8
 !  Linear System Direct Method = MUMPS
 
   Linear System Iterative Method = "BiCGStab"
+!  Linear System Iterative Method = "BiCGStabl"
   Bicgstabl Polynomial Degree = 4
   Linear System Max Iterations = 300
   Linear System Convergence Tolerance = 1.0E-07
@@ -345,8 +355,10 @@ Solver 11
   Scalar Field 13 = temperature
   Scalar Field 14 = pressure
   Scalar Field 15 = thickness
+ ! Scalar Field 16 = glen enhancement factor
   Scalar Field 16 = proj_bed
   Vector Field 1 = velocity
+ ! Vector Field 2 = dvu_ext 
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -393,10 +405,10 @@ Boundary Condition 3
   Test Contact Tolerance = real 1.0e-10
   Height = Real 0.0
   
-  Normal-Tangential Velocity = Logical TRUE !FALSE when applying vertical change to ice shelf only
+  Normal-Tangential Velocity = Logical FALSE !when applying vertical change to ice shelf only
 
-  Velocity 1 = Real 0.0e0  !3 when N-T vel is FALSE
-  Velocity 1 Condition = Variable GroundedMask !3 when N-T vel is FALSE 
+  Velocity 3 = Real 0.0e0  !3 when N-T vel is FALSE
+  Velocity 3 Condition = Variable GroundedMask !3 when N-T vel is FALSE 
     Real LUA "tx[0] + 0.5"
   
   FS Lower = Equals proj_bed
@@ -405,19 +417,19 @@ Boundary Condition 3
 
   Flow Force BC = Logical True
 
-  Slip Coefficient 2 = Variable proj_beta, GroundedMask !SC 1 when N-T vel is FALSE
+  Slip Coefficient 1 = Variable proj_beta, GroundedMask !SC 1 when N-T vel is FALSE
     REAL procedure "ElmerIceUSF" "TenPowerA_masked" 
-  Slip Coefficient 3 = Variable proj_beta, GroundedMask !SC 2 when N-T vel is FALSE
+  Slip Coefficient 2 = Variable proj_beta, GroundedMask !SC 2 when N-T vel is FALSE
     REAL procedure "ElmerIceUSF" "TenPowerA_masked" 
    
   External Pressure = Variable Coordinate 3!
     Real lua "sw_pressure(tx[0])"
  
- ! Slip Coefficient 1 = Real 3.0e-5 !3 when N-T vel is FLASE
+  Slip Coefficient 3 = Real 3.0e-5 !3 when N-T vel is FLASE
      
-  Slip Coefficient 1 = Variable Coordinate 3 !Slip coefficient 3 when N-T vel is FALSE
-     Real Procedure "ElmerIceUSF" "SeaSpring"
-  Compute Sea Spring = Logical True
+  !Slip Coefficient 3 = Variable Coordinate 3 !Slip coefficient 3 when N-T vel is FALSE
+    ! Real Procedure "ElmerIceUSF" "SeaSpring"
+  !Compute Sea Spring = Logical True
 End
 
 ! Upper Surface
@@ -425,6 +437,6 @@ Boundary Condition 4
   Name= "Surface" 
   Body Id = 3
   Depth = Real 0.0
-  Normal-Tangential Velocity = Logical TRUE !FALSE when applying vertical change to ice shelf only
-  !Slip Coefficient 1 = Real 3.0e-5 !SC 3 when N-T vel is FALSE
+  Normal-Tangential Velocity = Logical FALSE !when applying vertical change to ice shelf only
+  Slip Coefficient 3 = Real 3.0e-5 !SC 3 when N-T vel is FALSE
 End 
