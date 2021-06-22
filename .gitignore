@@ -3,8 +3,6 @@ batch*
 ./TG_S0/vtuoutputs/*vtu
 ./TG_S1/vtuoutputs/*vtu
 ./TG_S1/results/*
-./TG_S1p5/results/*
-./TG_S1p5/vtuoutputs/*
 ./TG_S1/vtuoutputs/*vtu
 ./TG_S2/vtuoutputs/*vtu
 ./TG_S0/old/*
