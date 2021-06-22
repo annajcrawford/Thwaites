@@ -39,7 +39,6 @@ batch*
 ./reg_workflow/TG_S3_drag/results/*
 ./reg_workflow/TG_S3_drag_pl/results/*vtu
 ./reg_workflow/TG_S1/*.result*
-
 old/*
 PROG/*
 Mesh/*
