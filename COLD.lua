@@ -150,18 +150,88 @@ function ControlEmergVel(vx,vy,upplim)
   SlipCoef = upplim*(1.0 - math.tanh(speed/ScalingSpeed))
 end
 
+-- ## set the distance at GL to non-zero values depending on flow speed...
+-- ## (experimental; not currently used)
+function distBF(vel)
+  if vel > refvel then
+    dist = 0.0
+  else
+    dist = 100000.0 * (refvel - vel)/refvel
+  end
+  return dist
+end
+
 -- ## function for setting an upper limit to mesh size based on distance
 -- ## (e.g. distance from grounding line)
 function refinebydist(distance)
-  factor = distance/distlim
+  factor = distance/GLdistlim
   if (factor < 0.0) then
     factor = 0.0
-  end	   
+  end	      
   if (factor > 1.0) then
     factor = 1.0
-  end	   
+  end	      
   Mmax = Mmaxclose*(1.0-factor) + Mmaxfar*factor
   return Mmax
+end
+
+-- ## function for setting an upper limit for mesh size
+function setmaxmesh(gldist,bdist,vel,glmask)
+  gldistfactor = gldist/GLdistlim
+  if (gldistfactor < 0.0) then
+    gldistfactor = 0.0
+  end		    
+  if (gldistfactor > 1.0) then
+    gldistfactor = 1.0
+  end		    
+  bdistfactor = bdist/Bdistlim
+  if (bdistfactor < 0.0) then
+    bdistfactor = 0.0
+  end		   
+  if (bdistfactor > 1.0) then
+    bdistfactor = 1.0
+  end		   
+  if (gldistfactor < bdistfactor) then
+    distfactor = gldistfactor
+  else
+    distfactor = bdistfactor
+  end
+  velfactor = vel/refvel
+  if (velfactor > 1.0) then
+    velfactor = 1.0
+  end
+  if velfactor < 0.5 then
+    velfactor = 0.5
+  end
+  Mmax = ( Mmaxclose*(1.0-distfactor) + Mmaxfar*distfactor ) / (velfactor)
+  if (glmask < 0.5) then
+      if (Mmax > Mmaxshelf) then
+      Mmax = Mmaxshelf
+    end
+  end
+  return Mmax
+end
+
+-- ## function for setting a lower limit for mesh size
+function setminmesh(gldist,bdist,glmask)
+  effectivedist = gldist - GLdistlim
+  if (effectivedist < 0.0) then
+    effectivedist = 0.0
+  end
+  distfactor = effectivedist / distscale
+  if (distfactor > 1.0) then
+    distfactor = 1.0
+  end
+  if (bdist < Bdistlim) then
+    distfactor = 0
+  end
+  Mmin = Mminfine*(1.0-distfactor) + Mmincoarse*distfactor
+  if (glmask < 0.5) then
+    if (Mmin > (Mmaxshelf - 50.0) ) then
+      Mmin = Mmaxshelf - 50.0
+    end
+  end
+  return Mmin
 end
 
 -- ## set the lower surface for a given upper surface and thickness
@@ -175,7 +245,7 @@ function getlowersurface(upp_surf,thick,bed)
     low_surf = bed
   end
   return low_surf
-end  		
+end		
 
 -- ## set the upper and lower surfaces to floatation
 function floatUpper(thick,bed)
@@ -200,7 +270,7 @@ function floatLower(thick,bed)
     low_surf = -thick*rhoi/rhoo
   end
   return low_surf
-end  		
+end		
 
 -- ## variable timestepping (TODO: dt_init and dt_max and dt_incr should be passed in)
 function timeStepCalc(nt)
@@ -231,8 +301,8 @@ end
 
 -- ## heat capacity
 function capacity(T)
-  c=146.3+(7.253*T)
-  return c
+  cpct = 146.3 + ( 7.253*T )
+  return cpct
 end
 
 function sw_pressure(z)

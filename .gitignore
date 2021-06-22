@@ -29,14 +29,17 @@ batch*
 ./TG_S4/vtuoutputs/*vtu
 ./TG_S4/*result*
 ./TG_S4/*dat
+./reg_workflow/*result*
 ./reg_workflow/TG_S1/vtuoutputs/*vtu
 ./reg_workflow/TG_S2/vtuoutputs/*vtu
 ./reg_workflow/TG_S3_mu/vtuoutputs/*vtu
 ./reg_workflow/TG_S3_drag/vtuoutputs/*vtu
+./reg_workflow/TG_S3_drag_pl/vtuoutputs/*vtu
 ./reg_workflow/TG_S1/results/*
 ./reg_workflow/TG_S2/results/*
 ./reg_workflow/TG_S3_mu/results/*
 ./reg_workflow/TG_S3_drag/results/*
+./reg_workflow/TG_S3_drag_pl/results/*vtu
 ./reg_workflow/TG_S1/*.result*
 
 old/*

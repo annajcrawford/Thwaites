@@ -4,7 +4,7 @@
 ! assert(loadfile('../../PIG.lua'))()
 !---LUA END
 
-$name="TG_SR_0617_Run1_pl"
+$name="TG_SR_0621_Run1_pl"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -457,8 +457,10 @@ End
 Boundary Condition 3
   Name= "lower_surface"
   Body Id = 2
-
+   
   Test Contact Tolerance = real 1.0e-10
+  Mass Consistent Normals = logical True #From drag inversion
+
   Height = Real 0.0
   
   Normal-Tangential Velocity = Logical TRUE !FALSE when applying vertical change to ice shelf only
