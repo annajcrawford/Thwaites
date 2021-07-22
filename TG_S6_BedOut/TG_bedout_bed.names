@@ -1,0 +1,19 @@
+Variables in file: ./TG_bedout_bed
+Elmer version: 9.0
+Elmer revision: f888395
+Elmer compilation date: 2021-05-27
+Solver input file: tg_s6_mu.sif
+File started at: 2021/06/29 17:54:45
+Number of data nodes for each step
+  bc nodes: 504
+  polyline nodes: 0
+  circle nodes: 0
+  isocurve nodes: 0
+Data on different columns
+  1: Iteration step
+  2: Boundary condition
+  3: Node index
+  4: coordinate 1
+  5: coordinate 2
+  6: coordinate 3
+  7: bed

@@ -1,18 +1,18 @@
 !---LUA BEGIN
-! assert(loadfile('../../COLD.lua'))()
-! assert(loadfile('../../PIG.lua'))()
+! assert(loadfile('../COLD.lua'))()
+! assert(loadfile('../PIG.lua'))()
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_invmu_0623_Run1"
+$name="TG_S6_0701_L8"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
-$LambdaReg=1.0e5
+$LambdaReg=1.0e8
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
-  Mesh DB "../" "#meshdb#"
+  Mesh DB "." "#meshdb#"
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -28,7 +28,7 @@ Simulation
   Coordinate System  = Cartesian 3D 
   Simulation Type = Steady State
 
-  Timestep size = Real 0.0011 !corresponds to restart position
+  !Timestep size = Real 0.0011 !corresponds to restart position
 
   Extruded Mesh Levels = #MLEV
   Extruded Mesh Density = Variable Coordinate 1
@@ -40,13 +40,13 @@ Simulation
   OutPut File = "$name$_.result"
   Output Intervals = 5
 
-  Restart File = "../reg_workflow/TG_S2/results/TG_SR_0621_Run1_pl.result"
-  Restart Position = 26
+  Restart File = "../TG_S5_drag_L5/results/TG_drag_0629_L5_.result"
+  Restart Position = 0
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
 
-  max output level = 9
+  max output level = 5
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -77,16 +77,16 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Initial Condition 1
 
-  TemperatureRel = Variable Temperature, Pressure
-    Real lua "relativetemp(tx[0],tx[1])"
+!  TemperatureRel = Variable Temperature, Pressure
+!    Real lua "relativetemp(tx[0],tx[1])"
     
-  Mu = Variable TemperatureRel
-    Real lua "initMu(tx[0])"
+!  Mu = Variable TemperatureRel
+!    Real lua "initMu(tx[0])"
 
-  EF = Real 1.0 
-  bottom EF = Real 1.0
+!  EF = Real 1.0 
+!  bottom EF = Real 1.0
 
-  alpha = Equals beta
+!  !alpha = Equals alpha
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -183,22 +183,21 @@ Solver 3
 
   Exported Variable 1 = alpha
   Exported Variable 1 DOFS = Integer 1
-  Exported Variable 2  = -global CostValue
+  Exported Variable 2 = -nooutput DJDBeta
   Exported Variable 2 DOFS = Integer 1
+  Exported Variable 3 = -global CostValue
+  Exported Variable 3 DOFS = Integer 1
 ! Variable used to force the adjoint system/update in CostSolver
-  Exported Variable 3 = -nooutput Velocityb
-  Exported Variable 3 DOFs = Integer 4
-  Exported Variable 4 = mu
-  Exported Variable 4 DOFS = Integer 1
-  Exported Variable 5 = DJDEF
+  Exported Variable 4 = -nooutput Velocityb
+  Exported Variable 4 DOFs = Integer 4
+  Exported Variable 5 = Mu
   Exported Variable 5 DOFS = Integer 1
-  Exported Variable 6 = bottom EF ! EF projected up from bottom by projecttoplane
+  Exported Variable 6 = DJDEF
   Exported Variable 6 DOFS = Integer 1
-  Exported Variable 7 = TemperatureRel ! Temperature relative to pressure melting 
+  Exported Variable 7 = bottom EF ! EF projected up from bottom by projecttoplane
   Exported Variable 7 DOFS = Integer 1
-  Exported Variable 8 = beta 
+  Exported Variable 8 = TemperatureRel ! Temperature relative to pressure melting 
   Exported Variable 8 DOFS = Integer 1
-!EF not exported, but believe because exported from solver below
 End
 
 !!! Compute Cost function
@@ -362,13 +361,26 @@ Solver 12
   Scalar Field 10 = TemperatureRel
   Scalar Field 11 = mu
   Scalar Field 12 = bottom EF
+  Scalar Field 13 = vx
+  Scalar Field 14 = vy
+  Scalar Field 15 = EF
+  Scalar Field 16 = Temperature
+  Scalar Field 17 = viscosity
   Vector Field 1  = velocity
 End
 
+Solver 13 !Is this applied to the correct body eq? (1)?
+  Equation = "Save BC Params"
+  Procedure = "SaveData" "SaveBoundaryValues"
+  Parameter 1 = String "External Pressure"
+  Parameter 2 = String "Slip Coefficient 1"
+  Parameter 3 = String "Slip Coefficient 2"
+  Parameter 4 = String "Slip Coefficient 3"
+End     
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Equation 1
-  Active Solvers (8) = 1 2 3 5 6 7 11 12
+  Active Solvers (9) = 1 2 3 5 6 7 11 12 13
   Flow Solution Name = String "Flow Solution"
   Convection = Computed 
   NS Convect= False
@@ -413,18 +425,18 @@ Boundary Condition 3
   !Name= "bed" mandatory to compute regularistaion term of the cost function (int (dbeta/dx) 2)
   Name = "bed"
   Body ID = Integer 2
-
+  
   Test Contact Tolerance = real 1.0e-10 #from SR
   Mass Consistent Normals = logical TRUE
 
   Normal-Tangential Velocity = Logical True
 
-  FS Lower = Equals bed  #likely unnecessary, from SR
+  FS Lower = Equals bed  !likely unnecessary, from SR
   FS Lower condition = Variable GroundedMask
      Real MATC "tx + 0.5"
 
   Flow Force BC = Logical True #from SR
- 
+
   Velocity 1 = Real 0.0
   Velocity 1 Condition = Variable GroundedMask
     Real MATC "tx + 0.5"
@@ -433,6 +445,8 @@ Boundary Condition 3
     REAL procedure "ElmerIceUSF" "TenPowerA_masked"
   Slip Coefficient 3 = Variable alpha, GroundedMask
     REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+  Slip Coefficient derivative = Variable alpha, GroundedMask
+    REAL procedure "ElmerIceUSF" "TenPowerA_d_Masked"
 
   External Pressure = Variable Coordinate 3
       Real lua "sw_pressure(tx[0])"

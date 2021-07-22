@@ -4,11 +4,12 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_invmu_0623_Run1"
+$name="TG_OptViscDrag_0623_Run1"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
 $LambdaReg=1.0e5
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
@@ -17,10 +18,10 @@ End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Constants
-  Buoyancy Use Basal Melt = Logical False
-  sea level = Real #zsl
   water density = Real #rhoo
   Sea Spring Timestep Size = Real 0.0011
+  Buoyancy Use Basal Melt = Logical False
+  sea level = Real #zsl
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -28,7 +29,7 @@ Simulation
   Coordinate System  = Cartesian 3D 
   Simulation Type = Steady State
 
-  Timestep size = Real 0.0011 !corresponds to restart position
+  Timestep size = 0.0011 !Corresponds to restart position
 
   Extruded Mesh Levels = #MLEV
   Extruded Mesh Density = Variable Coordinate 1
@@ -38,15 +39,30 @@ Simulation
   Steady State Max Iterations = #IMAX
 
   OutPut File = "$name$_.result"
-  Output Intervals = 5
+  Output Intervals = 1 !Change this later on
 
   Restart File = "../reg_workflow/TG_S2/results/TG_SR_0621_Run1_pl.result"
   Restart Position = 26
 
+!  Restart Variable 1  = String alpha
+!  Restart Variable 2  = String ef
+!  Restart Variable 3  = String bmb
+!  Restart Variable 4  = String groundedmask
+!  Restart Variable 5  = String temperature
+!  Restart Variable 6  = String pressure
+!  Restart Variable 7  = String viscosity
+!  Restart Variable 8  = String velocity
+!  Restart Variable 9  = String bottom ef
+!  Restart Variable 10 = String FS upper
+!  Restart Variable 11 = String FS lower
+!  Restart Variable 12 = String smbref
+!  Restart Variable 13 = String q_geo
+!  Restart Variable 14 = String thickness
+
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
 
-  max output level = 9
+  max output level = 5
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -57,7 +73,6 @@ Body 1
   Material = 1
   Initial Condition = 1
 End
-
 ! lower surface
 Body 2
   Equation = 2
@@ -65,7 +80,6 @@ Body 2
   Material = 1
   Initial Condition = 1
 End
-
 ! upper surface
 Body 3
   Equation = 3
@@ -79,14 +93,15 @@ Initial Condition 1
 
   TemperatureRel = Variable Temperature, Pressure
     Real lua "relativetemp(tx[0],tx[1])"
-    
+
   Mu = Variable TemperatureRel
     Real lua "initMu(tx[0])"
 
-  EF = Real 1.0 
+  EF = Real 1.0
   bottom EF = Real 1.0
 
-  alpha = Equals beta
+  alpha = Equals beta !Real -3.0
+
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -97,7 +112,7 @@ Body Force 1
 
   !# Cost not computed if H<=Hmin
   CostV Passive = Variable thickness
-      Real procedure "USFs" "PassiveCond_H"
+    Real procedure "USFs" "PassiveCond_H"
   Passive Element Min Nodes = Integer 3
 End
 
@@ -108,13 +123,13 @@ Material 1
 
   Density = Real #rhoi
 
-  Viscosity Model = String "power law" 
+  Viscosity Model = String "power law"
   Viscosity Exponent = Real #m
  
 ! Viscosity defined as mu*EF^2 to ensure >0 and to 
 ! use mu as initial guess (here EF is an enhancement factor)
   Viscosity = Variable bottom EF, mu
-    Real procedure "ElmerIceUSF" "Asquare_Scaled"
+    REAL procedure "ElmerIceUSF" "Asquare_Scaled"
 
   Viscosity derivative = Variable "bottom EF", mu
     REAL procedure "ElmerIceUSF" "Asquare_d_Scaled"
@@ -163,15 +178,14 @@ Solver 3
 
   Linear System Solver = Direct
   Linear System Direct Method = mumps
-  Mumps percentage increase working space = Integer 60
+  Mumps percentage increase working space = Integer 200
 
-  Nonlinear System Max Iterations = Integer 50
+!  Nonlinear System Max Iterations = Integer 100
+  Nonlinear System Max Iterations = Integer 40
   Nonlinear System Convergence Tolerance  = Real 1.0e-7
   Nonlinear System Newton After Iterations = 50
-  Nonlinear System Newton After Tolerance = 1.0e-5 
+  Nonlinear System Newton After Tolerance = 1.0e-5
   Nonlinear System Reset Newton = Logical True
-  !Nonlinear System Relaxation Factor = 0.4
-  Nonlinear System Abort Not Converged = Logical True
 
   Steady State Convergence Tolerance = Real 1.0e-10
 
@@ -183,22 +197,19 @@ Solver 3
 
   Exported Variable 1 = alpha
   Exported Variable 1 DOFS = Integer 1
-  Exported Variable 2  = -global CostValue
+  Exported Variable 2 = -global CostValue
   Exported Variable 2 DOFS = Integer 1
 ! Variable used to force the adjoint system/update in CostSolver
   Exported Variable 3 = -nooutput Velocityb
   Exported Variable 3 DOFs = Integer 4
   Exported Variable 4 = mu
   Exported Variable 4 DOFS = Integer 1
-  Exported Variable 5 = DJDEF
+  Exported Variable 5 = TemperatureRel ! Temperature relative to pressure melting 
   Exported Variable 5 DOFS = Integer 1
-  Exported Variable 6 = bottom EF ! EF projected up from bottom by projecttoplane
+  Exported Variable 6 = beta
   Exported Variable 6 DOFS = Integer 1
-  Exported Variable 7 = TemperatureRel ! Temperature relative to pressure melting 
-  Exported Variable 7 DOFS = Integer 1
-  Exported Variable 8 = beta 
-  Exported Variable 8 DOFS = Integer 1
-!EF not exported, but believe because exported from solver below
+  Exported Variable 7 = bottom EF
+  Exported Variable 7 DOFS = Integer 1 
 End
 
 !!! Compute Cost function
@@ -212,7 +223,6 @@ Solver 4
 
   Optimize Bandwidth = logical false
 
-  Problem Dimension = Integer 2 ! I think this is not used after all...
   Cost Variable Name = String "CostValue"  ! Name of Cost Variable
 ! save the cost as a function of iterations (iterations,Cost,rms=sqrt(2*Cost/Ndata)
   Cost Filename = File "Cost_U_$name$.dat"
@@ -230,6 +240,7 @@ end
 
 !!!!  Adjoint Solution
 Solver 5
+!  Exec solver = never
   Equation = "Adjoint"
   procedure = "ElmerIceSolvers" "Adjoint_LinearSolver"
 
@@ -259,6 +270,7 @@ end
 Solver 7
 !  Exec solver = never
   Equation = "SumDJDEF"
+!  Procedure = File "StructuredProjectToPlane" "StructuredProjectToPlane"
   Procedure = File "StructuredProjectToPlane_local" "StructuredProjectToPlane"
 
   Active Coordinate = Integer 3
@@ -266,19 +278,14 @@ Solver 7
 
   Variable 1 = String DJDEF
   Operator 1 = String sum
+
+!  exported variable 1 = string sum DJDEF
 end
 
 Solver 8
-!  Exec solver = never
   Equation = "DJDEF_Reg"
 
-  !!  Solver need to be associated => Define dumy variable
-  Variable = "DJDEFreg"
-  Variable DOFs = 1
-
   procedure = "ElmerIceSolvers" "Adjoint_CostRegSolver"
-
-  Optimize Bandwidth = logical false
 
   Problem Dimension = Integer 2
   Cost Filename = File "CostReg_$name$.dat"
@@ -289,21 +296,53 @@ Solver 8
   Reset Cost Value = Logical False
   A priori Regularisation = Logical False
 
-  Exported Variable 1 = EF
-  Exported Variable 1 DOFS = Integer 1
+  ! The optimised variable is a vector made of EF and beta (beta is drag coef)
+  Exported Variable 1 = Var[EF:1 beta:1]
+  Exported Variable 1 DOFs = 2
+  ! Gradient of the cost function w.r.t. EF and beta 
+  Exported Variable 2 = DJDVar[sum DJDEF:1 DJDBeta:1]
+  Exported Variable 2 DOFs = 2
 end
 
-!!!!! Optimization procedure 
 Solver 9
-!  Exec solver = never
+  Equation = "DJDBeta"
+  procedure = "ElmerIceSolvers" "AdjointStokes_GradientBetaSolver"
+
+  Flow Solution Name = String "Flow Solution"
+  Adjoint Solution Name = String "Adjoint"
+  Gradient Variable Name = String "DJDbeta"
+
+!  Exported Variable 1 = DJDbeta
+end
+
+Solver 10 
+  Equation = "DJDBeta_Reg"
+
+  procedure = "ElmerIceSolvers" "Adjoint_CostRegSolver"
+
+  Cost Filename = File "CostReg_$name$.dat"
+  Optimized Variable Name = String "Beta"
+  Gradient Variable Name = String "DJDBeta"
+  Cost Variable Name = String "CostValue"
+  Lambda = Real $LambdaReg
+  Reset Cost Value = Logical False  !=> DJDapha already initialized in solver DJDBeta; switch off initialisation to 0 at the beginning of this solver
+  A priori Regularisation = Logical False
+End
+
+Solver 11
   Exec Solver = after Timestep
 
   Equation = "Optimize_m1qn3"
   procedure = "ElmerIceSolvers" "Optimize_m1qn3Parallel"
 
   Cost Variable Name = String "CostValue"
-  Optimized Variable Name = String "EF"
-  Gradient Variable Name = String "sum DJDEF"
+
+!  Optimized Variable Name = String "beta"
+!  Gradient Variable Name = String "DJDbeta"
+!  Optimized Variable Name = String "EF"
+!  Gradient Variable Name = String "sum DJDEF"
+  Optimized Variable Name = String "var"
+  Gradient Variable Name = String "DJDvar"
   gradient Norm File = String "GradientNormAdjoint_$name$.dat"
 
   !Note: it may be beneficial to set this to True, which scales
@@ -324,23 +363,6 @@ Solver 9
   M1QN3 ndz = Integer 20
 end
 
-Solver 10
-  Equation = "Emergence velocity"
-  Procedure = "ElmerIceSolvers" "GetEmergenceVelocity"
-  Variable = -dofs 1 EmergenceVelocity
-End
-
-! save data, save materials
-Solver 11
-  Exec Solver = String "after saving"
-  Equation = "SaveMaterials"
-  Variable = String -nooutput dummyvar
-
-  Procedure = File "SaveData" "SaveMaterials"
-
-  Parameter 1 =  String "Viscosity"
-End
-
 Solver 12
   Exec Solver = String "after saving"
   Equation = String "ResultOutput"
@@ -350,47 +372,27 @@ Solver 12
   Output Format = String "vtu"
   Output Directory = File #outdir
   Vtu Format = Logical True
-  Scalar Field 1  = EmergenceVelocity
-  Scalar Field 2  = alpha
-  Scalar Field 3  = beta
-  Scalar Field 4  = bed
-  Scalar Field 5  = height
-  Scalar Field 6  = depth
-  Scalar Field 7  = FS upper
-  Scalar Field 8  = FS lower
-  Scalar Field 9 = groundedmask
-  Scalar Field 10 = TemperatureRel
-  Scalar Field 11 = mu
-  Scalar Field 12 = bottom EF
-  Vector Field 1  = velocity
 End
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Equation 1
-  Active Solvers (8) = 1 2 3 5 6 7 11 12
-  Flow Solution Name = String "Flow Solution"
-  Convection = Computed 
+  Active Solvers (7) = 1 2 3 5 6 7 12
   NS Convect= False
 End
 
 Equation 2
-  Active Solvers (2) = 8 9
-  Convection = Computed 
-  Flow Solution Name = String "Flow Solution"
-  Friction Load Mask = String "GroundedMask"
+  Active Solvers (4) = 8 9 10 11
 End
 
 Equation 3
-  Active Solvers (2) = 4 10
-  Convection = Computed 
-  Flow Solution Name = String "Flow Solution"
+  Active Solvers (1) = 4
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Boundary Condition 1
-  Name = "calving_front" 
-  Target Boundaries(1) = 2
+  Name = "Side Walls" ! should be calving front actually...
+  Target Boundaries(1) = 1
 
  Flow Force BC = logical True
  External Pressure = variable coordinate 3
@@ -401,7 +403,7 @@ End
 
 Boundary Condition 2
   Name = "inland_boundary"
-  Target Boundaries(1)  = 1
+  Target Boundaries(1)  = 2
 
   Normal-Tangential Velocity = Logical True
   Slip Coefficient 1 = Real 10.0
@@ -414,32 +416,23 @@ Boundary Condition 3
   Name = "bed"
   Body ID = Integer 2
 
-  Test Contact Tolerance = real 1.0e-10 #from SR
-  Mass Consistent Normals = logical TRUE
+  Mass Consistent Normals = logical True
 
-  Normal-Tangential Velocity = Logical True
+  Normal-Tangential Velocity = Logical True  
 
-  FS Lower = Equals bed  #likely unnecessary, from SR
-  FS Lower condition = Variable GroundedMask
-     Real MATC "tx + 0.5"
+  Velocity 1 = Variable bmb, GroundedMask
+    Real lua "bmb_as_vel(tx[0],tx[1])"
 
-  Flow Force BC = Logical True #from SR
- 
-  Velocity 1 = Real 0.0
-  Velocity 1 Condition = Variable GroundedMask
-    Real MATC "tx + 0.5"
+!  Velocity 1 = Real 0.0e0
 
-  Slip Coefficient 2 = Variable alpha, GroundedMask
-    REAL procedure "ElmerIceUSF" "TenPowerA_masked"
-  Slip Coefficient 3 = Variable alpha, GroundedMask
-    REAL procedure "ElmerIceUSF" "TenPowerA_masked"
+  Slip Coefficient 2 = Variable beta, GroundedMask
+     REAL procedure "ElmerIceUSF" "TenPowerA_masked"
 
-  External Pressure = Variable Coordinate 3
-      Real lua "sw_pressure(tx[0])"
+  Slip Coefficient 3 = Variable beta, GroundedMask
+     REAL procedure "ElmerIceUSF" "TenPowerA_masked"
 
-  Slip Coefficient 1 = Variable Coordinate 3
-    Real Procedure "ElmerIceUSF" "SeaSpring"
-  Compute Sea Spring = Logical True
+  Slip Coefficient derivative = Variable beta, GroundedMask
+     REAL procedure "ElmerIceUSF" "TenPowerA_d_Masked"
 
 End
 
@@ -448,5 +441,11 @@ Boundary Condition 4
   !Name= "Surface" mandatory to compute cost function
   Name = "Surface"
   Body Id = 3
-  Normal-Tangential Velocity = Logical True  
+
+!  Slip Coefficient 1 = Variable vx, vy, velocity 1, smbref
+!    Real procedure "USFs" "ConstrainEmergVel"
+
+!  Velocity 1 = variable smbref
+!    Real lua "0.0 - tx[0]"
+
 End 

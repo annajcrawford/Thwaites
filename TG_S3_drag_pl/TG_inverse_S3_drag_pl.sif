@@ -4,7 +4,7 @@
 !---LUA END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$name="TG_drag_0617_Run1"
+$name="TG_drag_0623_Run1"
 
 ! The total cost function to minimize is J=J_u + LambdaReg * Jreg
 ! where J_u=velocity error; Jreg=regularisation (smoothness)
@@ -18,7 +18,7 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Constants
   water density = Real #rhoo
-  Sea Spring Timestep Size = Real 0.0049
+  Sea Spring Timestep Size = Real 0.0011
   Buoyancy Use Basal Melt = Logical False
   sea level = Real #zsl
 End
@@ -28,7 +28,7 @@ Simulation
   Coordinate System  = Cartesian 3D 
   Simulation Type = Steady State
  
-  Timestep size = Real 0.0049 !because starting early on in SR
+  Timestep size = Real 0.0011 !corresponds to restart position
 
   Extruded Mesh Levels = #MLEV
   Extruded Mesh Density = Variable Coordinate 1
@@ -38,10 +38,10 @@ Simulation
   Steady State Max Iterations = #IMAX
 
   OutPut File = "$name$_.result"
-  Output Intervals = 1
+  Output Intervals = 5
 
-  Restart File = "../reg_workflow/TG_S2/results/TG_SR_0611_Run2.result"
-  Restart Position = 34
+  Restart File = "../reg_workflow/TG_S2/results/TG_SR_0621_Run1_pl.result"
+  Restart Position = 26
 
   Restart Before Initial Conditions = logical True
   Initialize Dirichlet Conditions = Logical False
@@ -77,6 +77,15 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Initial Condition 1
  
+  TemperatureRel = Variable Temperature, Pressure
+    Real lua "relativetemp(tx[0],tx[1])"
+
+  Mu = Variable TemperatureRel
+    Real lua "initMu(tx[0])"
+
+  EF = Real 1.0
+  bottom EF = Real 1.0
+
   alpha = Equals beta !Real -3.0
 
 End
@@ -99,21 +108,18 @@ Material 1
   sea level = Real #zsl
 
   Density = Real #rhoi
-  
-  Viscosity Model = String "glen"
-  Viscosity = 1.0 
-  Glen Exponent = Real #n
 
-  !Temperature Field Variable = String "Temperature"
-  Relative Temperature = Variable Temperature, Pressure
-    Real lua "relativetemp(tx[0],tx[1])"
+  Viscosity Model = String "power law"
+  Viscosity Exponent = Real #m
 
-  Limit Temperature = Real -10.0
-  Rate Factor 1 = Real #A1
-  Rate Factor 2 = Real #A2
-  Activation Energy 1 = Real #Q1
-  Activation Energy 2 = Real #Q2
-  Glen Enhancement Factor = Real 1.0
+! Viscosity defined as mu*EF^2 to ensure >0 and to
+! use mu as initial guess (here EF is an enhancement factor)
+  Viscosity = Variable bottom EF, mu
+    REAL procedure "ElmerIceUSF" "Asquare_Scaled"
+
+  Viscosity derivative = Variable "bottom EF", mu
+    REAL procedure "ElmerIceUSF" "Asquare_d_Scaled"
+
   Critical Shear Rate = Real 1.0e-10
 End
 
@@ -178,10 +184,14 @@ Solver 2
   Exported Variable 4 DOFs = Integer 4
   Exported Variable 5 = beta
   Exported Variable 5 DOFs = Integer 1
- ! Exported Variable 6 = dvu_ext
- ! Exported Variable 6 DOFS = Integer 1
- ! Exported Variable 7 = Glen Enhancement Factor
- ! Exported Variable 7 DOFS = Integer 1
+  Exported Variable 6 = TemperatureRel
+  Exported Variable 6 DOFs = Integer 1
+  Exported Variable 7 = Mu
+  Exported Variable 7 DOFs = Integer 1
+  Exported Variable 8 = bottom EF
+  Exported Variable 8 DOFs = Integer 1
+  Exported Variable 9 = EF
+  Exported Variable 9 DOFs = Integer 1
 End
 
 
@@ -369,17 +379,21 @@ Boundary Condition 3
   !Name= "bed" mandatory to compute regularistaion term of the cost function (int (dbeta/dx) 2)
   Name= "bed" 
   Body ID = 2
-  
-  Mass Consistent Normals = logical True
+
+  Test Contact Tolerance = real 1.0e-10 #from SR
+  Mass Consistent Normals = logical TRUE 
 
   Normal-Tangential Velocity = Logical True  
-
-!  Velocity 1 = Variable bmb, GroundedMask
-!    Real lua "bmb_as_vel(tx[0],tx[1])"
 
   Velocity 1 = Real 0.0e0
   Velocity 1 Condition = Variable GroundedMask
     Real MATC "tx + 0.5"
+
+  FS Lower = Equals bed  #likely unnecessary, from SR
+  FS Lower condition = Variable GroundedMask
+     Real MATC "tx + 0.5"
+
+  Flow Force BC = Logical True #from SR
 
   Slip Coefficient 2 = Variable alpha, GroundedMask
     REAL procedure "ElmerIceUSF" "TenPowerA_masked" 
@@ -394,7 +408,6 @@ Boundary Condition 3
   Slip Coefficient 1 = Variable Coordinate 3
     Real Procedure "ElmerIceUSF" "SeaSpring" 
   Compute Sea Spring = Logical True
-
 End
 
 ! Upper Surface
