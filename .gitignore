@@ -208,8 +208,6 @@ Mesh/*
 ./TG_S6_mu_L5_Slip/results/*
 ./TG_S6_mu_L5_Slip/vtuoutputs/*
 
-!./TG_S6_mu_L5/results/*
-!./TG_S6_mu_L5/vtuoutputs/*
 
 
 
