@@ -183,8 +183,6 @@ Mesh/*
 ./TG_S6_mu_L5/batchElmer.sh
 ./TG_S6_mu_L5/errors.txt
 ./TG_S6_mu_L5/output.txt
-./TG_S6_mu_L5/results/*
-./TG_S6_mu_L5/vtuoutputs/*
 ./TG_S6_mu_L6/ELMERSTART
 ./TG_S6_mu_L6/batchElmer.sh
 ./TG_S6_mu_L6/errors.txt
@@ -210,14 +208,8 @@ Mesh/*
 ./TG_S6_mu_L5_Slip/results/*
 ./TG_S6_mu_L5_Slip/vtuoutputs/*
 
-
-
-
-
-
-
-
-
+!./TG_S6_mu_L5/results/*
+!./TG_S6_mu_L5/vtuoutputs/*
 
 
 
