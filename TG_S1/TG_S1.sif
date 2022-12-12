@@ -1,12 +1,14 @@
 !--LUA BEGIN
-! assert(loadfile('../../COLD.lua'))()
-! assert(loadfile('../../PIG.lua'))()
+! assert(loadfile('../COLD.lua'))()
+! assert(loadfile('../PIG.lua'))()
 !---LUA END
 
 $name = "readNC"
 
 Header
-  Mesh DB "../" "#meshdb#"
+  Mesh DB "." "mesh2D_TG_refpart" !"#meshdb#"
+  Include Path "include"
+  Results Directory "./results"
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -18,7 +20,7 @@ Simulation
   BDF Order = 1
   TimeStep intervals = 1
   TimeStep Sizes = 0.1
-  Output File = $name".result"
+  Output File = "$name$.result" !$name".result"
   Max Output Level = 9 
   Initialize Dirichlet Conditions = Logical False
   Extruded Mesh Levels = Integer #MLEV
