@@ -1,14 +1,15 @@
-
 !---LUA BEGIN
-! assert(loadfile('../../COLD.lua'))()
-! assert(loadfile('../../PIG.lua'))()
+! assert(loadfile('../COLD.lua'))()
+! assert(loadfile('../PIG.lua'))()
 !---LUA END
 
-$name="TG_SR_0621_Run1_pl"
+$name= "TG_SR_120522_Run1_pl" ! preDec2022: "TG_SR_0621_Run1_pl"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Header
-  Mesh DB "../" "#meshdb#"
+  Mesh DB "." "../mesh2D_TG_refpart/" !was "#meshdb#"
+  !Include Path "Include"
+  !Results Directory "./results/"
 End
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -35,7 +36,7 @@ Simulation
   Timestepping Method = "bdf"
   BDF Order = 1
 
-  Timestep Intervals = 76
+  Timestep Intervals = 76 !have previously just run 1 ts for comparison of TEIS pinning point area over relaxation period
   Timestep Size = Variable "Timestep"
     Real lua "timeStepCalc(tx[0])"
   Output Intervals = 1
@@ -45,7 +46,7 @@ Simulation
 
   Output File = "$name$.result"
 
-  Restart File = "../reg_workflow/TG_S1/results/readnc.result"
+  Restart File = "../TG_S1/results/mesh2D_TG_refpart/readNC.result" !meshdir added in Dec 22 because of linking issues to mesh and results directories
   Restart Position = 0
   Restart Time = Real 2015.0
 
@@ -217,17 +218,17 @@ Solver 3
   Enable Scaling = Logical False
 End
 
-Solver 4
-   Exec Solver = "Before Timestep"
-   Equation = "Get Meltrate"
-   Procedure = "MeltrateSolver" "MeltrateSolver"
-   Nonlocal Melt Rate = Logical False !would be anyhow the default
-   Meltrate Mask = String "GroundedMask"
-   Variable = bmb
-   Variable DOFs = 1
-End
+!Solver 4
+!   Exec Solver = "Never"
+!   Equation = "Get Meltrate"
+!   Procedure = "MeltrateSolver" "MeltrateSolver"
+!   Nonlocal Melt Rate = Logical False !would be anyhow the default
+!   Meltrate Mask = String "GroundedMask"
+!   Variable = bmb
+!   Variable DOFs = 1
+!End
 
-Solver 5
+Solver 4
   !Exec Solver = "never"
   Exec Solver = "Before Timestep"
   Equation = "MapCoordinate"
@@ -241,7 +242,7 @@ Solver 5
   Correct Surface = Logical True
 End
 
-Solver 6
+Solver 5
   Equation = "HeightDepth"
   Exec Solver = "Before Timestep"
   Procedure = "StructuredProjectToPlane" "StructuredProjectToPlane"
@@ -250,7 +251,7 @@ Solver 6
   Operator 2 = height
 End
 
-Solver 7
+Solver 6
   Exec Solver = Before all 
   Equation = "GroundedMask"
   Procedure = "ElmerIceSolvers" "GroundedSolver"
@@ -259,7 +260,7 @@ Solver 7
   Toler = Real #GLTolerance
 End
 
-Solver 8
+Solver 7
 !  Exec solver = never
   Equation = "Normal Vector"
   Procedure = "ElmerIceSolvers" "ComputeNormalSolver"
@@ -269,7 +270,7 @@ Solver 8
   Optimize Bandwidth = Logical False
 End
 
-Solver 9
+Solver 8
 !  Exec solver = never
   Equation = Fw
   Procedure = "ElmerIceSolvers" "GetHydrostaticLoads"
@@ -278,7 +279,7 @@ Solver 9
 End
 
 !!!! Navier-Stokes Solution
-Solver 10
+Solver 9
   Equation = "Navier-Stokes"  
   Stabilization Method = String Stabilized
   Flow Model = Stokes
@@ -325,7 +326,7 @@ Solver 10
 
 End
 
-Solver 11
+Solver 10
   Exec solver = "Never" !runs as never commented in by LAGS_relax_S2.sif
   Equation = String "StressSolver"
   Procedure =  File "ElmerIceSolvers" "ComputeDevStress"
@@ -350,7 +351,7 @@ Solver 11
   Linear System Residual Output = 1
 End
 
-Solver 12
+Solver 11
 ! Exec Solver = Never
   Exec Solver = "After TimeStep"
   Equation =  String "Lower Free Surface"
@@ -378,7 +379,7 @@ Solver 12
   Exported Variable 2 DOFS = 1
 End
 
-Solver 13
+Solver 12
 !  Exec Solver = Never
   Exec Solver = "After TimeStep"
   Equation =  String "Upper Free Surface"
@@ -406,7 +407,7 @@ Solver 13
   Exported Variable 2 DOFS = 1
 End
 
-Solver 14
+Solver 13
   Exec Solver = String "after saving"
   Equation = String "ResultOutput"
   Procedure = File "ResultOutputSolve" "ResultOutputSolver"
@@ -420,17 +421,17 @@ End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Equation 1
-  Active Solvers (11) = 1 2 3 4 5 6 8 9 10 11 14
+  Active Solvers (10) = 1 2 3 4 5 7 8 9 10 13  !1 2 3 4 5 6 8 9 10 11 14
 End
 
 Equation 2
-  Active Solvers (2) = 7 12
+  Active Solvers (2) = 6 11 !7 12
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
 
 Equation 3
-  Active Solvers (1) = 13
+  Active Solvers (1) = 12 !13
   Convection = Computed
   Flow Solution Name = String "Flow Solution"
 End
@@ -459,7 +460,7 @@ Boundary Condition 3
   Body Id = 2
    
   Test Contact Tolerance = real 1.0e-10
-  Mass Consistent Normals = logical True #From drag inversion
+  Mass Consistent Normals = logical True !From drag inversion
 
   Height = Real 0.0
   
